@@ -1,5 +1,5 @@
 # MBMobileClient
-Aqui é o APP mobile
+Bem-vindo(a) a versão APP mobile
 
 ## Telas Principais
 - Tela de Login / Acesso
@@ -10,5 +10,17 @@ Aqui é o APP mobile
 - Tela de detalhes
 - Confirmação de exclusão
 
-### Framework
-- React Native
+## Configurações: 
+
+#### [Expo](https://docs.expo.dev/ "Documentação") e [React Native](https://reactnative.dev/ "Documentação")
+
+#### Para começar
+1. Instale as dependências: 
+`npm install`
+2. Inicie o aplicativo: 
+`npx expo start`
+3. Para rodar o projeto: 
+`npm run android`
+
+#### Ajuda
+- Tutorial para Sair do Zero: [React Native em 2026](https://youtu.be/7uGjAMhI8G4 "Guia prático e completo para começar do zero")
