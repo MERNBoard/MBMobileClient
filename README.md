@@ -1,5 +1,13 @@
 # MBMobileClient
-Aqui é o APP mobile
+Bem-vindo a versão APP mobile
+
+Para começar
+1. Instale as dependências: 
+`npm install`
+2. Inicie o aplicativo: 
+`npx expo start`
+3. Para rodar o projeto: 
+`npm run android`
 
 ## Telas Principais
 - Tela de Login / Acesso
