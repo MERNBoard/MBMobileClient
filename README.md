@@ -1,8 +1,7 @@
 # MBMobileClient
 Bem-vindo(a) a versão APP mobile
 
-Neste repositório, utilize branches para desenvolvimento e evite realizar alterações diretamente na main.
-
+Para este repositório, todas as mudanças devem ser feitas em branches, nunca diretamente na main.
 ## Telas Principais
 - Tela de Login / Acesso
 - Dashboard / Página inicial
