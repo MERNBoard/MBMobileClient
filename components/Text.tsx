@@ -17,6 +17,17 @@ export function Texto({ texto }: TitleProps) {
   );
 }
 
+
+
+
+
+
+
+
+
+
+// -------------------------------------------------------- Estilos para os textos
+
 const styles = StyleSheet.create({
   titulo: {
     color: "#60439f",

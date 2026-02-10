@@ -21,12 +21,20 @@ export default function Index() {
       componente02={<Texto texto="Mais conteúdo aqui" />}
       
       />
-
-      <ButtonColorido text="Salvar" onPress={() => console.log("Salvar")} />
-
     </View>
   );
 }
+
+
+
+
+
+
+
+
+
+
+// -------------------------------------------------------- Estilos para a página
 
 const styles = StyleSheet.create({
   container: {

@@ -59,6 +59,16 @@ export function Baseboard({
   );
 }
 
+
+
+
+
+
+
+
+
+
+
 /* ===== Estilos ===== */
 const styles = StyleSheet.create({
   header: {
