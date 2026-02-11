@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { View, StyleSheet, Alert } from "react-native";
-import { ButtonTransparente } from "@/components/Button";
 import { Title, Texto } from "@/components/Text";
 import { Header, Body } from "@/components/Layout";
 import { GraficoPizza } from "@/components/GraficoPizza";
@@ -95,12 +94,6 @@ export default function Index() {
             pendentes={pendentes}
             emAndamento={emAndamento}
             concluidas={concluidas}
-          />
-        }
-        componente02={
-          <ButtonTransparente
-            text="Atualizar"
-            onPress={buscarTarefas}
           />
         }
       />
