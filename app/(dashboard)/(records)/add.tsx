@@ -1,136 +1,141 @@
 import React, { useState } from "react";
-import { View, TextInput, StyleSheet, Pressable, Text } from "react-native";
+import {
+  View,
+  TextInput,
+  StyleSheet,
+} from "react-native";
 
 import { Header, Body } from "@/components/Layout";
+import OptionSelector from "@/components/OptionSelector";
 import { Title, Texto } from "@/components/Text";
-import { ButtonColorido } from "@/components/Button"
+import { ButtonColorido } from "@/components/Button";
 
+/**
+ * Página para adicionar nova tarefa/registro
+ * Funcionalidades:
+ * - Formulário completo com validação de estado
+ * - Campos de texto livre (título, descrição, categoria, tags, data)
+ * - Selectors para Status e Prioridade (usando OptionSelector)
+ * - Layout com Header e Body personalizados
+ * - Estado centralizado no objeto 'form'
+ */
 export default function RecordAddPage() {
-  const [status, setStatus] = useState("PENDENTE");
-  const [prioridade, setPrioridade] = useState("MEDIA");
+  /**
+   * Estado do formulário - objeto com todos os campos da tarefa
+   * Valores iniciais: campos vazios + status/prioridade padrão
+   */
+  const [form, setForm] = useState({
+    titulo: "",
+    descricao: "",
+    categoria: "",
+    tags: "",
+    status: "Pendente",      // Valor padrão
+    prioridade: "Média",     // Valor padrão
+    deadline: "",
+  });
+
+  /**
+   * Função utilitária para atualizar campos do formulário
+   * @param campo - Nome do campo a ser atualizado (chave do objeto form)
+   * @param valor - Novo valor do campo
+   * Usa spread operator para manter outros campos intactos
+   */
+  const updateForm = (campo: string, valor: string) => {
+    setForm((prev) => ({ ...prev, [campo]: valor }));
+  };
 
   return (
     <>
+      {/* Header da página com título "Nova Tarefa" */}
       <Header
         componente01={<Title texto="Nova Tarefa" />}
-        componente02={null}
+        componente02={null}  // Slot direito vazio
       />
 
+      {/* Body principal com formulário completo */}
       <Body
         componente01={
           <View>
-            {/* Título */}
+            {/* Campo TÍTULO */}
             <Texto texto="Título" />
             <TextInput
               style={styles.input}
-              placeholder="Digite o título da tarefa"
+              placeholder="Digite um título"
+              value={form.titulo}
+              onChangeText={(v) => updateForm("titulo", v)}
             />
 
-            {/* Descrição */}
+            {/* Campo DESCRIÇÃO */}
             <Texto texto="Descrição" />
             <TextInput
-              style={[styles.input, styles.textArea]}
+              style={styles.input}
               placeholder="Descreva a tarefa"
-              multiline
+              value={form.descricao}
+              onChangeText={(v) => updateForm("descricao", v)}
             />
 
-            {/* Tags */}
+            {/* Campo CATEGORIA */}
+            <Texto texto="Categoria" />
+            <TextInput
+              style={styles.input}
+              placeholder="Ex: Estudos, Trabalho"
+              value={form.categoria}
+              onChangeText={(v) => updateForm("categoria", v)}
+            />
+
+            {/* Campo TAGS */}
             <Texto texto="Tags" />
             <TextInput
               style={styles.input}
-              placeholder="Ex: estudo, trabalho"
+              placeholder="Ex: node.js, JavaScript"
+              value={form.tags}
+              onChangeText={(v) => updateForm("tags", v)}
             />
 
+            {/* SELECTOR STATUS - usando componente OptionSelector */}
+            <OptionSelector
+              label="Status"
+              options={["Pendente", "Em Andamento", "Concluída"]}
+              selected={form.status}
+              onSelect={(valor) => updateForm("status", valor)}
+            />
 
-            {/* Status */}
-            <Texto texto="Status" />
-            <View style={styles.row}>
-              {["PENDENTE", "EM_ANDAMENTO", "CONCLUIDA"].map(item => (
-                <Pressable
-                  key={item}
-                  style={[
-                    styles.option,
-                    status === item && styles.optionSelected,
-                  ]}
-                  onPress={() => setStatus(item)}
-                >
-                  <Text style={styles.optionText}>
-                    {item.replace("_", " ")}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+            {/* SELECTOR PRIORIDADE - usando componente OptionSelector */}
+            <OptionSelector
+              label="Prioridade"
+              options={["Baixa", "Média", "Alta"]}
+              selected={form.prioridade}
+              onSelect={(valor) => updateForm("prioridade", valor)}
+            />
 
-            {/* Prioridade */}
-            <Texto texto="Prioridade" />
-            <View style={styles.row}>
-              {["BAIXA", "MEDIA", "ALTA"].map(item => (
-                <Pressable
-                  key={item}
-                  style={[
-                    styles.option,
-                    prioridade === item && styles.optionSelected,
-                  ]}
-                  onPress={() => setPrioridade(item)}
-                >
-                  <Text style={styles.optionText}>{item}</Text>
-                </Pressable>
-              ))}
-            </View>
-
-            {/* Deadline */}
-            <Texto texto="Deadline" />
+            {/* Campo DATA/DEADLINE */}
+            <Texto texto="Data" />
             <TextInput
               style={styles.input}
               placeholder="DD/MM/AAAA"
+              value={form.deadline}
+              onChangeText={(v) => updateForm("deadline", v)}
             />
 
-            {/* Botão */}
+            {/* Botão de ação principal */}
             <ButtonColorido
               text="Criar Tarefa"
-              onPress={() => { }}
+              onPress={() => console.log(form)} 
             />
           </View>
         }
-        componente02={null}
+        componente02={null}  // Slot direito vazio
       />
     </>
   );
 }
 
+
 const styles = StyleSheet.create({
   input: {
-    backgroundColor: "#ffffff",
-    borderRadius: 8,
+    backgroundColor: "#fff",
+    borderRadius: 10,
     padding: 12,
-    marginBottom: 16,
-  },
-
-  textArea: {
-    height: 80,
-    textAlignVertical: "top",
-  },
-
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-
-  option: {
-    backgroundColor: "#f2e7fe",
-    padding: 10,
-    borderRadius: 8,
-    minWidth: 100,
-    alignItems: "center",
-  },
-
-  optionSelected: {
-    backgroundColor: "#b39ddb",
-  },
-
-  optionText: {
-    color: "#21155d",
-    fontWeight: "bold",
+    marginBottom: 15, // Espaçamento entre campos
   },
 });
