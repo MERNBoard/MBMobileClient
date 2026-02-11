@@ -82,11 +82,11 @@ const styles = StyleSheet.create({
 
 // -------------------------------------------------------- Estilo para o cabeçalho
   header: {
-    flexDirection: "row", // organiza os itens em linha
+    flexDirection: "column",   // empilha verticalmente
     justifyContent: "space-between", // espaça os itens igualmente
     alignItems: "center", // alinha os itens ao centro verticalmente
     backgroundColor: "#ffffff",
-    padding: 20,// espaçamento interno
+    padding: 10,// espaçamento interno
     borderRadius: 15, // borda arredondada
   },
 
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     alignItems: "center",// alinha os itens ao centro verticalmente
     height: 110,// altura fixa
     backgroundColor: "#ffffff",
-    padding: 20,// espaçamento interno
+    padding: 10,// espaçamento interno
     borderRadius: 15, // borda arredondada
   },
 

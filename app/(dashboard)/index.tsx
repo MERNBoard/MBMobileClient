@@ -15,18 +15,23 @@ export default function Index() {
       <View style={styles.headersRow}>
 
         <Header 
-        componente01={<Title texto="Cabeçalho 1" />} 
+        componente01={<Title texto="A fazer" />} 
+        componente02={<Texto texto="3" />}
         />
+
         <Header 
-        componente01={<Title texto="Cabeçalho 2" />} 
+        componente01={<Title texto="Em andamento" />} 
+        componente02={<Texto texto="2" />}
         />
+
         <Header 
-        componente01={<Title texto="Cabeçalho 3" />} 
+        componente01={<Title texto="Concluído" />} 
+        componente02={<Texto texto="5" />}
         />
 
       </View>
 
-      <Body componente01={<Title texto="Visão Geral" />} />
+      <Body componente01={<Title texto="Detalhes" />} />
     </View>
   );
 }
@@ -37,14 +42,14 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    padding: 10, // espaçamento interno
     backgroundColor: "#f2e7fe", // cor de fundo
 
   },
   headersRow: {
-    flexDirection: "row", // coloca os filhos lado a lado
     justifyContent: "space-between", // espaço entre os cabeçalhos
-    marginBottom: 20, // separa do Body
-    
+    marginBottom: 10, // separa do Body
+
+    flexDirection: "row",      // alinha os cabeçalhos horizontalmente
   },
 });
