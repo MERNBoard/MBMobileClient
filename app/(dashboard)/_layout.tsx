@@ -15,7 +15,7 @@ export default function TabLayout() {
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarActiveTintColor: "#60439f", // ícone ativo
-        tabBarInactiveTintColor: "rgb(243, 232, 255)", // ícone inativo
+        tabBarInactiveTintColor: "rgb(91, 74, 105)", // ícone inativo
 
       }}
     >
