@@ -48,8 +48,9 @@ const styles = StyleSheet.create({
   },
   headersRow: {
     justifyContent: "space-between", // espaço entre os cabeçalhos
+    gap: 10, // espaço entre os Headers
     marginBottom: 10, // separa do Body
 
-    flexDirection: "row",      // alinha os cabeçalhos horizontalmente
+    flexDirection: "column",      // alinha os cabeçalhos verticalmente
   },
 });
