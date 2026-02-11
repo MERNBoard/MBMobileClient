@@ -4,25 +4,31 @@ import { PieChart } from "react-native-chart-kit";
 
 const screenWidth = Dimensions.get("window").width;
 
-export function GraficoPizza() {
+type Props = {
+  pendentes: number;
+  emAndamento: number;
+  concluidas: number;
+};
+
+export function GraficoPizza({ pendentes, emAndamento, concluidas }: Props) {
   const data = [
     {
-      name: "A fazer", // nome da categoria
-      population: 3, // valor da categoria
-      color: "#7e57c2", // cor da fatia
-      legendFontColor: "#21155d", // cor da legenda
-      legendFontSize: 12,// tamanho da fonte da legenda
+      name: "Pendentes",
+      population: pendentes,
+      color: "#7e57c2",
+      legendFontColor: "#21155d",
+      legendFontSize: 12,
     },
     {
       name: "Em andamento",
-      population: 2,
+      population: emAndamento,
       color: "#42a5f5",
       legendFontColor: "#21155d",
       legendFontSize: 12,
     },
     {
       name: "Concluído",
-      population: 5,
+      population: concluidas,
       color: "#66bb6a",
       legendFontColor: "#21155d",
       legendFontSize: 12,
@@ -32,18 +38,18 @@ export function GraficoPizza() {
   return (
     <View>
       <PieChart
-        data={data}// dados para o gráfico
-        width={screenWidth - 40}// largura do gráfico (ajustada para o padding)
-        height={230}// altura do gráfico
-        accessor="population"// chave para acessar os valores dos dados
-        backgroundColor="transparent"// cor de fundo do gráfico
-        paddingLeft="15"// espaço à esquerda do gráfico para a legenda
-        absolute// exibe os valores absolutos nas fatias
+        data={data}
+        width={screenWidth - 40}
+        height={230}
+        accessor="population"
+        backgroundColor="transparent"
+        paddingLeft="15"
+        absolute
         chartConfig={{
-          backgroundColor: "#ffffff",// cor de fundo do gráfico
-          backgroundGradientFrom: "#ffffff",// cor de início do gradiente de fundo
-          backgroundGradientTo: "#ffffff",// cor de fim do gradiente de fundo
-          color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,// função para definir a cor das fatias com base na opacidade
+          backgroundColor: "#ffffff",
+          backgroundGradientFrom: "#ffffff",
+          backgroundGradientTo: "#ffffff",
+          color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
         }}
       />
     </View>
