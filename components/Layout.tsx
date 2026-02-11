@@ -82,37 +82,37 @@ const styles = StyleSheet.create({
 
 // -------------------------------------------------------- Estilo para o cabeçalho
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: "row", // organiza os itens em linha
+    justifyContent: "space-between", // espaça os itens igualmente
+    alignItems: "center", // alinha os itens ao centro verticalmente
     backgroundColor: "#ffffff",
-    padding: 20,
+    padding: 20,// espaçamento interno
     borderRadius: 15, // borda arredondada
   },
 
 // -------------------------------------------------------- Estilo para o corpo
   body: {
     flex: 1,
-    backgroundColor: "#f2e7fe",
-    padding: 20,
+    backgroundColor: "#ffffff",
+    padding: 20,// espaçamento interno
     borderRadius: 15, // borda arredondada
   },
 
 // -------------------------------------------------------- Estilo para o rodapé
   baseboard: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    height: 110,
+    flexDirection: "row",// organiza os itens em linha
+    justifyContent: "space-between",// espaça os itens igualmente
+    alignItems: "center",// alinha os itens ao centro verticalmente
+    height: 110,// altura fixa
     backgroundColor: "#ffffff",
-    padding: 20,
+    padding: 20,// espaçamento interno
     borderRadius: 15, // borda arredondada
   },
 
 // -------------------------------------------------------- Estilo para o texto do rodapé
   text: {
     color: "#fff2e7fe",
-    fontSize: 40,
-    fontWeight: "bold",
+    fontSize: 40,// tamanho da fonte
+    fontWeight: "bold",// peso da fonte
   },
 });

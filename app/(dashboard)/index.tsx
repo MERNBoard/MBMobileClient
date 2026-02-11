@@ -10,7 +10,7 @@ export default function Index() {
 
     <View style={styles.container}>
 
-      {/* Container para os dois cabeçalhos lado a lado */}
+      {/* Container para os três cabeçalhos lado a lado */}
 
       <View style={styles.headersRow}>
 
@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#21155d", // cor de fundo
+    backgroundColor: "#f2e7fe", // cor de fundo
 
   },
   headersRow: {

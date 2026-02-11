@@ -27,9 +27,9 @@ export default function TabLayout() {
           headerShown: true,
           title: "Dashboard",
           headerStyle: {
-                backgroundColor: colorScheme === "dark" ? "#f2e7fe" : "#21155d", // fundo do header
+                backgroundColor: colorScheme === "dark" ? "#21155d" : "#f2e7fe", // fundo do header
               },
-          headerTintColor: colorScheme === "dark" ? "#21155d" : "#f2e7fe", // cor do texto e ícones
+          headerTintColor: colorScheme === "dark" ? "#f2e7fe" : "#21155d", // cor do texto e ícones
 
           tabBarIcon: ({ color, size }) => (
             <Octicons size={size} name="home" color={color} />
