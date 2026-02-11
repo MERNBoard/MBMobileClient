@@ -11,7 +11,7 @@ export default function Index() {
     <View style={styles.container}>
 
       {/* Container para os dois cabeçalhos lado a lado */}
-      
+
       <View style={styles.headersRow}>
 
         <Header 
@@ -35,10 +35,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    backgroundColor: "#21155d", // cor de fundo
+
   },
   headersRow: {
     flexDirection: "row", // coloca os filhos lado a lado
     justifyContent: "space-between", // espaço entre os cabeçalhos
     marginBottom: 20, // separa do Body
+    
   },
 });

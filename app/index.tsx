@@ -20,7 +20,7 @@ export default function SplashPage() {
           width: "100%",
         }}
       >
-        <ActivityIndicator size="small" color="#0000ff" />
+        <ActivityIndicator size="small" color="#452f82" />
         <Text style={{ marginTop: 20 }}>Carregando...</Text>
       </View>
     </>
