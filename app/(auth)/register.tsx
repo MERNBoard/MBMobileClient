@@ -1,8 +1,27 @@
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Button } from "react-native";
 import { router } from "expo-router";
-
+import React from "react";
+import { API_AUTH } from "../../servirces/auth"
+import { Alert } from "react-native";
 
 export default function RegisterPage() {
+
+
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [confirmPassword, setConfirmPassword] = React.useState("");
+  const [name, setName] = React.useState("");
+
+  const handleRegister = async () => {
+    try {
+      await API_AUTH(name, email, password);
+
+       Alert.alert("Sucesso", "Usuário cadastrado!");
+    } catch (error: any) {
+      Alert.alert("Erro", error.message);
+    }
+  };
+
   return (
     <>
       <View style={styles.container}>
@@ -25,25 +44,25 @@ export default function RegisterPage() {
 
             <Text style={styles.text}>Nome Completo:</Text>
             <TextInput
-              placeholder="Digite seu nome completo"
+              placeholder="Digite seu nome completo" onChangeText={setName}
               style={styles.input}
             />
 
             <Text style={styles.text}>email:</Text>
             <TextInput
-              placeholder="Digite seu email"
+              placeholder="Digite seu email" onChangeText={setEmail}
               style={styles.input}
             />
 
             <Text style={styles.text}>Insira sua senha :</Text>
             <TextInput
-              placeholder="Digite sua senha"
+              placeholder="Digite sua senha" onChangeText={setPassword}
               style={styles.input}
             />
 
             <Text style={styles.text}>Insira sua senha :</Text>
             <TextInput
-              placeholder="Comfirme sua senha"
+              placeholder="Comfirme sua senha" onChangeText={setConfirmPassword}
               style={styles.input}
             />
 
@@ -51,8 +70,8 @@ export default function RegisterPage() {
           {/* Botão para ir para o Dashboard */}
           <View >
             <Button
-              title="Dashboard"
-              onPress={() => router.push("/(dashboard)")}
+              title="Registrar"
+              onPress={handleRegister}
             />
           </View>
         </View>

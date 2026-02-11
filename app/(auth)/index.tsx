@@ -1,7 +1,14 @@
 import { router } from "expo-router";
 import { Button, Text, View, StyleSheet, TextInput, TouchableOpacity } from "react-native";
+import React from "react";
 
 export default function AuthPage() {
+
+
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  
+
   return (
     <>
       <View
@@ -25,13 +32,13 @@ export default function AuthPage() {
           <View>
             <Text style={styles.text}>email:</Text>
             <TextInput
-              placeholder="Digite seu email"
+              placeholder="Digite seu email" onChangeText={setEmail}
               style={styles.input}
             />
 
             <Text style={styles.text}>Insira sua senha :</Text>
             <TextInput
-              placeholder="Digite sua senha"
+              placeholder="Digite sua senha" onChangeText={setPassword}
               style={styles.input}
             />
           </View>
