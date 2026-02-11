@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
   body: {
     flex: 1,
     flexDirection: "column",   // empilha verticalmente
-    justifyContent: "space-between", // espaça os itens igualmente
+    justifyContent: "center", // centraliza os itens verticalmente
     alignItems: "center", // alinha os itens ao centro verticalmente
     backgroundColor: "#ffffff",
     padding: 20,// espaçamento interno
