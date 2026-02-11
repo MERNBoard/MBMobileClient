@@ -20,6 +20,9 @@ export default function Index() {
         <Header 
         componente01={<Title texto="Cabeçalho 2" />} 
         />
+        <Header 
+        componente01={<Title texto="Cabeçalho 3" />} 
+        />
 
       </View>
 
