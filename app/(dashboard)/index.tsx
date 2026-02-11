@@ -4,46 +4,41 @@ import { ButtonColorido, ButtonTransparente } from "@/components/Button";
 import { Title,Texto } from "@/components/Text";
 import { Header, Body, Baseboard } from "@/components/Layout";
 
-
 export default function Index() {
   return (
+
+
     <View style={styles.container}>
 
-      <Header 
+      {/* Container para os dois cabeçalhos lado a lado */}
       
-      componente01={<Title texto="Minhas Tarefas" />}  
-      componente02={<ButtonTransparente text=" + Adicionar Tarefa" onPress={() => console.log("Adicionar")}/>}     
-      />
+      <View style={styles.headersRow}>
 
-      <Body 
-      
-      componente01={<Texto texto="Corpo do Layout" />} 
-      componente02={<Texto texto="Mais conteúdo aqui" />}
-      
-      />
+        <Header 
+        componente01={<Title texto="Cabeçalho 1" />} 
+        />
+        <Header 
+        componente01={<Title texto="Cabeçalho 2" />} 
+        />
+
+      </View>
+
+      <Body componente01={<Title texto="Visão Geral" />} />
     </View>
   );
 }
 
 
 
-
-
-
-
-
-
-
 // -------------------------------------------------------- Estilos para a página
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 20,
+  headersRow: {
+    flexDirection: "row", // coloca os filhos lado a lado
+    justifyContent: "space-between", // espaço entre os cabeçalhos
+    marginBottom: 20, // separa do Body
   },
 });

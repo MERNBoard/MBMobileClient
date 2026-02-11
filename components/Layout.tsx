@@ -1,12 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 
-/* ===== Tipos ===== */
-
-type TwoComponentsProps = {
-  componente01?: React.ReactNode;
-  componente02?: React.ReactNode;
-};
+// ------------------------------------------- Tipos para os componentes do Layout
 
 type FourComponentsProps = {
   componente01?: React.ReactNode;
@@ -15,34 +10,45 @@ type FourComponentsProps = {
   componente04?: React.ReactNode;
 };
 
-/* ===== Cabeçalho ===== */
+// -------------------------------------------------------- Cabeçalho
 export function Header({
   componente01,
   componente02,
-}: TwoComponentsProps) {
+  componente03,
+  componente04,
+}: FourComponentsProps) {
   return (
     <View style={styles.header}>
+
       {componente01}
       {componente02}
+      {componente03}
+      {componente04}
+
     </View>
   );
 }
 
-/* ===== Corpo ===== */
+// -------------------------------------------------------- Corpo
 export function Body({
   componente01,
   componente02,
-}: TwoComponentsProps) {
+  componente03,
+  componente04,
+}: FourComponentsProps) {
   return (
     <View style={styles.body}>
 
       {componente01}
       {componente02}
+      {componente03}
+      {componente04}
+
     </View>
   );
 }
 
-/* ===== Rodapé ===== */
+// -------------------------------------------------------- Rodapé
 export function Baseboard({
   componente01,
   componente02,
@@ -51,10 +57,12 @@ export function Baseboard({
 }: FourComponentsProps) {
   return (
     <View style={styles.baseboard}>
+
       {componente01}
       {componente02}
       {componente03}
       {componente04}
+
     </View>
   );
 }
@@ -68,34 +76,40 @@ export function Baseboard({
 
 
 
+// -------------------------------------------------------- Estilos para os componentes do Layout
 
-/* ===== Estilos ===== */
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: "row", // Alinha os componentes horizontalmente
-    justifyContent: "space-between", // Espaço entre os componentes
-    alignItems: "center",// Alinha os componentes verticalmente
 
+// -------------------------------------------------------- Estilo para o cabeçalho
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     backgroundColor: "#ffffff",
-    padding: 20, // marginBottom: 20,
+    padding: 20,
+    borderRadius: 15, // borda arredondada
   },
 
+// -------------------------------------------------------- Estilo para o corpo
   body: {
     flex: 1,
     backgroundColor: "#f2e7fe",
     padding: 20,
+    borderRadius: 15, // borda arredondada
   },
 
+// -------------------------------------------------------- Estilo para o rodapé
   baseboard: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-
     height: 110,
     backgroundColor: "#ffffff",
     padding: 20,
+    borderRadius: 15, // borda arredondada
   },
 
+// -------------------------------------------------------- Estilo para o texto do rodapé
   text: {
     color: "#fff2e7fe",
     fontSize: 40,
