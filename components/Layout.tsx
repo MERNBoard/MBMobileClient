@@ -93,6 +93,9 @@ const styles = StyleSheet.create({
 // -------------------------------------------------------- Estilo para o corpo
   body: {
     flex: 1,
+    flexDirection: "column",   // empilha verticalmente
+    justifyContent: "space-between", // espaça os itens igualmente
+    alignItems: "center", // alinha os itens ao centro verticalmente
     backgroundColor: "#ffffff",
     padding: 20,// espaçamento interno
     borderRadius: 15, // borda arredondada

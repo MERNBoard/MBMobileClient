@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { ButtonColorido, ButtonTransparente } from "@/components/Button";
 import { Title,Texto } from "@/components/Text";
 import { Header, Body, Baseboard } from "@/components/Layout";
+import { GraficoPizza } from "@/components/GraficoPizza";
 
 export default function Index() {
   return (
@@ -31,7 +32,11 @@ export default function Index() {
 
       </View>
 
-      <Body componente01={<Title texto="Detalhes" />} />
+      <Body
+        componente01={<GraficoPizza />}
+        componente02={<ButtonTransparente text="Atualizar" onPress={() => {}} />}
+      />
+      
     </View>
   );
 }

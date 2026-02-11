@@ -18,10 +18,7 @@ export function ButtonColorido({ text, onPress }: ButtonProps) {
 // -------------------------------------------------------- Botao Transparente
 export function ButtonTransparente({ text, onPress }: ButtonProps) {
   return (
-    <TouchableOpacity
-      style={styles.buttonTransparente}
-      onPress={onPress}
-    >
+    <TouchableOpacity style={styles.buttonTransparente} onPress={onPress} >
       <Text style={styles.text}>{text}</Text>
     </TouchableOpacity>
   );
