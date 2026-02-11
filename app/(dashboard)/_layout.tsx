@@ -8,17 +8,27 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   return (
+
+// O componente Tabs é usado para criar uma barra de navegação inferior (tab bar) com várias telas.
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarButton: HapticTab,
+
       }}
     >
+
+//
       <Tabs.Screen
         name="index"
         options={{
           headerShown: true,
           title: "Dashboard",
+          headerStyle: {
+                backgroundColor: colorScheme === "dark" ? "#f2e7fe" : "#21155d", // fundo do header
+              },
+          headerTintColor: colorScheme === "dark" ? "#21155d" : "#f2e7fe", // cor do texto e ícones
+
           tabBarIcon: ({ color, size }) => (
             <Octicons size={size} name="home" color={color} />
           ),
@@ -31,6 +41,7 @@ export default function TabLayout() {
           title: "Registros",
           tabBarIcon: ({ color, size }) => (
             <Octicons size={size} name="check" color={color} />
+            
           ),
         }}
       />
