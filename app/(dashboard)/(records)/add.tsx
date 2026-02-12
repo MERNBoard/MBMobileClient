@@ -20,10 +20,16 @@ import CustomAlert from "../../../components/CustomAlert";
 import { useTheme } from "../../../context/ThemeContext";
 import api from "../../../services/api";
 
+/**
+ * Página de Criação de Registros/Tarefas.
+ * * Fornece um formulário completo para criar uma nova tarefa, incluindo
+ * tratamento de datas, seleção de prioridade/status e validação de rascunho antes de sair.
+ */
 export default function RecordAddPage() {
   const { theme, themeName } = useTheme();
   const [loading, setLoading] = useState(false);
 
+  // --- CONFIGURAÇÃO DE ALERTAS ---
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertConfig, setAlertConfig] = useState({
     title: "",
@@ -33,6 +39,9 @@ export default function RecordAddPage() {
     confirmText: "Ok",
   });
 
+  /**
+   * Helper para exibir o CustomAlert com configurações dinâmicas.
+   */
   const showAlert = (
     title: string,
     message: string,
@@ -50,6 +59,7 @@ export default function RecordAddPage() {
     setAlertVisible(true);
   };
 
+  // --- ESTADO DO FORMULÁRIO ---
   const [form, setForm] = useState({
     titulo: "",
     descricao: "",
@@ -60,8 +70,12 @@ export default function RecordAddPage() {
     deadline: "",
   });
 
+  /**
+   * Aplica máscara de data (DD/MM/AAAA) enquanto o usuário digita.
+   * @param text - String bruta do input.
+   */
   const handleDateChange = (text: string) => {
-    const cleaned = text.replace(/\D/g, "");
+    const cleaned = text.replace(/\D/g, ""); // Remove não numéricos
     let formatted = cleaned;
     if (cleaned.length > 2)
       formatted = `${cleaned.slice(0, 2)}/${cleaned.slice(2)}`;
@@ -70,10 +84,17 @@ export default function RecordAddPage() {
     updateForm("deadline", formatted);
   };
 
+  /**
+   * Atualiza um campo específico do objeto de estado do formulário.
+   */
   const updateForm = (campo: string, valor: string) => {
     setForm((prev) => ({ ...prev, [campo]: valor }));
   };
 
+  /**
+   * Lógica de cancelamento.
+   * Se houver dados preenchidos, pergunta ao usuário se ele deseja descartar as alterações.
+   */
   const handleCancel = () => {
     const hasData =
       form.titulo.trim() !== "" ||
@@ -98,8 +119,12 @@ export default function RecordAddPage() {
     }
   };
 
+  /**
+   * Valida e envia os dados para a API.
+   * * Converte a data de formato BR (DD/MM/AAAA) para ISO (YYYY-MM-DD...) antes do envio.
+   */
   const handleSave = async () => {
-    // Validações básicas
+    // Validações de campos obrigatórios
     if (
       !form.titulo.trim() ||
       !form.descricao.trim() ||
@@ -109,11 +134,14 @@ export default function RecordAddPage() {
       return;
     }
 
+    // Validação de estrutura da data
     const dateParts = form.deadline.split("/");
     if (dateParts.length !== 3 || dateParts[2].length !== 4) {
       showAlert("Data Inválida", "Use o formato DD/MM/AAAA", "danger");
       return;
     }
+
+    // Construção da data ISO para o backend
     const isoDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}T23:59:59.000Z`;
 
     setLoading(true);
@@ -141,6 +169,7 @@ export default function RecordAddPage() {
     }
   };
 
+  // --- DESIGN SYSTEM & THEMING ---
   const inputBg = theme.input || (themeName === "dark" ? "#252525" : "#E8E8E8");
   const contrastBorder = theme.detail || "#333";
   const textColor = theme.textLight || "#FFFFFF";
@@ -164,6 +193,7 @@ export default function RecordAddPage() {
                 <Title texto="Nova Tarefa" style={{ color: labelColor }} />
               </View>
 
+              {/* Seção: Identificação */}
               <Texto
                 texto="Título"
                 style={{ color: labelColor, fontWeight: "bold" }}
@@ -205,6 +235,7 @@ export default function RecordAddPage() {
                 onChangeText={(v) => updateForm("descricao", v)}
               />
 
+              {/* Seção: Classificação e Prazo */}
               <View style={styles.row}>
                 <View style={{ flex: 1, marginRight: 10 }}>
                   <Texto
@@ -269,6 +300,7 @@ export default function RecordAddPage() {
                 onChangeText={(v) => updateForm("tags", v)}
               />
 
+              {/* Seção: Seletores de Opções (Enums) */}
               <View style={styles.row}>
                 <View style={{ flex: 1, marginRight: 10 }}>
                   <OptionSelector
@@ -288,6 +320,7 @@ export default function RecordAddPage() {
                 </View>
               </View>
 
+              {/* Botões de Ação */}
               <View style={[styles.row, { marginTop: 25, gap: 10 }]}>
                 <TouchableOpacity
                   onPress={handleCancel}
