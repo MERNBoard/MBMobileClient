@@ -1,39 +1,61 @@
-import { HapticTab } from "@/components/haptic-tab";
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import Octicons from "@expo/vector-icons/Octicons";
-import { Tabs } from "expo-router";
+import { Drawer } from "expo-router/drawer";
 import React from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useTheme } from "../../context/ThemeContext";
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+export default function DashboardLayout() {
+  const { theme } = useTheme();
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Drawer
+        screenOptions={{
           headerShown: true,
-          title: "Dashboard",
-          tabBarIcon: ({ color, size }) => (
-            <Octicons size={size} name="home" color={color} />
-          ),
+          headerStyle: {
+            backgroundColor: theme.background,
+          },
+          headerTintColor: theme.textLight,
+          drawerActiveTintColor: theme.accent,
+          drawerStyle: {
+            backgroundColor: theme.background,
+          },
+          drawerLabelStyle: {
+            color: theme.textLight,
+          },
         }}
-      />
-      <Tabs.Screen
-        name="(records)"
-        options={{
-          headerShown: false,
-          title: "Registros",
-          tabBarIcon: ({ color, size }) => (
-            <Octicons size={size} name="check" color={color} />
-          ),
-        }}
-      />
-    </Tabs>
+      >
+        <Drawer.Screen
+          name="index"
+          options={{
+            drawerLabel: "Início",
+            title: "Dashboard",
+            drawerIcon: ({ size }) => (
+              <Octicons size={size} name="home" color={theme.accent} />
+            ),
+          }}
+        />
+        <Drawer.Screen
+          name="(records)"
+          options={{
+            drawerLabel: "Tarefas",
+            title: "Minhas Tarefas",
+            drawerIcon: ({ size }) => (
+              <Octicons size={size} name="checklist" color={theme.accent} />
+            ),
+          }}
+        />
+        <Drawer.Screen
+          name="settings/index"
+          options={{
+            drawerLabel: "Configurações",
+            title: "Aparência",
+            drawerIcon: ({ size }) => (
+              <Octicons size={size} name="gear" color={theme.accent} />
+            ),
+          }}
+        />
+      </Drawer>
+    </GestureHandlerRootView>
   );
 }

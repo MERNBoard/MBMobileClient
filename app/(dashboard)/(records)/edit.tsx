@@ -2,41 +2,41 @@ import { Octicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-
-// Importando o componente de alerta
 import CustomAlert from "../../../components/CustomAlert";
+import { useTheme } from "../../../context/ThemeContext";
+import api from "../../../services/api";
 
-// Definindo os tipos para as opções
-type FormKeys = "status" | "priority" | "tag" | "category";
+type FormKeys = "status" | "prioridade" | "tag" | "category";
 
 export default function RecordEditPage() {
+  const { theme } = useTheme();
   const { id } = useLocalSearchParams();
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [hasChanges, setHasChanges] = useState(false);
 
-  // Estados para o formulário
   const [form, setForm] = useState({
-    title: "",
-    description: "",
-    status: "Pendente",
-    priority: "Média",
+    titulo: "",
+    descricao: "",
+    status: "PENDENTE",
+    prioridade: "MEDIA",
     category: "Geral",
     tag: "Trabalho",
     deadline: "",
   });
 
-  // --- ESTADO DO ALERTA CUSTOMIZADO ---
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertConfig, setAlertConfig] = useState({
     title: "",
@@ -59,24 +59,35 @@ export default function RecordEditPage() {
   const [activeField, setActiveField] = useState<FormKeys | null>(null);
 
   const options = {
-    status: ["Pendente", "Em Andamento", "Concluída", "Cancelada"],
-    priority: ["Baixa", "Média", "Alta", "Urgente"],
+    status: ["PENDENTE", "EM_ANDAMENTO", "CONCLUIDA"],
+    prioridade: ["BAIXA", "MEDIA", "ALTA"],
     tag: ["Trabalho", "Estudo", "Pessoal", "Importante"],
     category: ["Design", "Dev", "Financeiro", "Geral"],
   };
 
   useEffect(() => {
-    if (id) {
-      setForm({
-        title: "Revisão de Projeto",
-        description: "Ajustar os pontos críticos do layout",
-        status: "Em Andamento",
-        priority: "Alta",
-        category: "Design",
-        tag: "Urgente",
-        deadline: "20/05/2024",
-      });
-    }
+    const fetchTaskData = async () => {
+      try {
+        const response = await api.get("/usuario/tarefas");
+        const task = response.data.find((t: any) => t.id === id);
+        if (task) {
+          setForm({
+            titulo: task.titulo,
+            descricao: task.descricao || "",
+            status: task.status,
+            prioridade: task.prioridade,
+            category: task.categoria || "Geral",
+            tag: task.tags?.[0] || "Trabalho",
+            deadline: task.deadline ? task.deadline.split("T")[0] : "",
+          });
+        }
+      } catch (error) {
+        Alert.alert("Erro", "Não foi possível carregar a tarefa.");
+      } finally {
+        setFetching(false);
+      }
+    };
+    if (id) fetchTaskData();
   }, [id]);
 
   const updateForm = (key: string, value: string) => {
@@ -98,14 +109,26 @@ export default function RecordEditPage() {
     triggerAlert(
       "Confirmar",
       "Deseja salvar as alterações nesta tarefa?",
-      () => {
+      async () => {
         setAlertVisible(false);
         setLoading(true);
-        setTimeout(() => {
-          setLoading(false);
+        try {
+          await api.put(`/usuario/tarefas/${id}`, {
+            titulo: form.titulo,
+            descricao: form.descricao,
+            status: form.status,
+            prioridade: form.prioridade,
+            categoria: form.category,
+            tags: [form.tag],
+            deadline: form.deadline,
+          });
           setHasChanges(false);
           router.back();
-        }, 1000);
+        } catch (error) {
+          Alert.alert("Erro", "Falha ao atualizar.");
+        } finally {
+          setLoading(false);
+        }
       },
     );
   };
@@ -126,6 +149,16 @@ export default function RecordEditPage() {
     }
   };
 
+  if (fetching) {
+    return (
+      <View
+        style={[styles.loadingContainer, { backgroundColor: theme.background }]}
+      >
+        <ActivityIndicator size="large" color={theme.accent} />
+      </View>
+    );
+  }
+
   const CustomPickerTrigger = ({
     label,
     value,
@@ -136,14 +169,19 @@ export default function RecordEditPage() {
     field: FormKeys;
   }) => (
     <View style={styles.flex1}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, { color: theme.accent }]}>{label}</Text>
       <TouchableOpacity
-        style={styles.customInput}
+        style={[
+          styles.customInput,
+          { backgroundColor: theme.primary, borderColor: theme.secondary },
+        ]}
         onPress={() => openPicker(field)}
         activeOpacity={0.7}
       >
-        <Text style={styles.inputText}>{value}</Text>
-        <Octicons name="chevron-down" size={16} color="#AAA" />
+        <Text style={[styles.inputText, { color: theme.textLight }]}>
+          {value}
+        </Text>
+        <Octicons name="chevron-down" size={16} color={theme.detail} />
       </TouchableOpacity>
     </View>
   );
@@ -151,19 +189,29 @@ export default function RecordEditPage() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor: theme.background }}
     >
       <ScrollView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: theme.background }]}
         contentContainerStyle={styles.content}
       >
-        <Text style={styles.header}>Editar Tarefa</Text>
+        <Text style={[styles.header, { color: theme.textLight }]}>
+          Editar Tarefa
+        </Text>
 
-        <Text style={styles.label}>Título</Text>
+        <Text style={[styles.label, { color: theme.accent }]}>Título</Text>
         <TextInput
-          style={styles.input}
-          value={form.title}
-          onChangeText={(v) => updateForm("title", v)}
+          style={[
+            styles.input,
+            {
+              backgroundColor: theme.primary,
+              borderColor: theme.secondary,
+              color: theme.textLight,
+            },
+          ]}
+          value={form.titulo}
+          onChangeText={(v) => updateForm("titulo", v)}
+          placeholderTextColor={theme.detail}
         />
 
         <View style={styles.row}>
@@ -175,8 +223,8 @@ export default function RecordEditPage() {
           <View style={{ width: 12 }} />
           <CustomPickerTrigger
             label="Prioridade"
-            value={form.priority}
-            field="priority"
+            value={form.prioridade}
+            field="prioridade"
           />
         </View>
 
@@ -184,30 +232,46 @@ export default function RecordEditPage() {
           <CustomPickerTrigger label="Tag" value={form.tag} field="tag" />
           <View style={{ width: 12 }} />
           <View style={styles.flex1}>
-            <Text style={styles.label}>Prazo</Text>
+            <Text style={[styles.label, { color: theme.accent }]}>Prazo</Text>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: theme.primary,
+                  borderColor: theme.secondary,
+                  color: theme.textLight,
+                },
+              ]}
               value={form.deadline}
-              placeholder="DD/MM/AAAA"
+              placeholder="AAAA-MM-DD"
+              placeholderTextColor={theme.detail}
               onChangeText={(v) => updateForm("deadline", v)}
             />
           </View>
         </View>
 
         <TouchableOpacity
-          style={[styles.saveButton, !hasChanges && styles.disabledButton]}
+          style={[
+            styles.saveButton,
+            { backgroundColor: theme.accent },
+            !hasChanges && { backgroundColor: theme.secondary },
+          ]}
           onPress={handleUpdate}
           disabled={loading || !hasChanges}
         >
           {loading ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={theme.background} />
           ) : (
-            <Text style={styles.saveText}>Salvar Alterações</Text>
+            <Text style={[styles.saveText, { color: theme.background }]}>
+              Salvar Alterações
+            </Text>
           )}
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
-          <Text style={styles.cancelButtonText}>Cancelar e Voltar</Text>
+          <Text style={[styles.cancelButtonText, { color: "#FF3B30" }]}>
+            Cancelar e Voltar
+          </Text>
         </TouchableOpacity>
 
         <Modal visible={pickerVisible} transparent animationType="fade">
@@ -216,25 +280,36 @@ export default function RecordEditPage() {
             activeOpacity={1}
             onPress={() => setPickerVisible(false)}
           >
-            <View style={styles.modalContent}>
-              <Text style={styles.modalHeader}>Selecione uma opção</Text>
+            <View
+              style={[styles.modalContent, { backgroundColor: theme.primary }]}
+            >
+              <Text style={[styles.modalHeader, { color: theme.textLight }]}>
+                Selecione uma opção
+              </Text>
               {activeField &&
                 options[activeField].map((opt) => (
                   <TouchableOpacity
                     key={opt}
-                    style={styles.optionButton}
+                    style={[
+                      styles.optionButton,
+                      { borderBottomColor: theme.secondary },
+                    ]}
                     onPress={() => selectOption(opt)}
                   >
                     <Text
                       style={[
                         styles.optionText,
-                        form[activeField] === opt && styles.optionSelected,
+                        { color: theme.textLight },
+                        form[activeField] === opt && {
+                          color: theme.accent,
+                          fontWeight: "bold",
+                        },
                       ]}
                     >
                       {opt}
                     </Text>
                     {form[activeField] === opt && (
-                      <Octicons name="check" size={16} color="#000" />
+                      <Octicons name="check" size={16} color={theme.accent} />
                     )}
                   </TouchableOpacity>
                 ))}
@@ -242,7 +317,6 @@ export default function RecordEditPage() {
           </TouchableOpacity>
         </Modal>
 
-        {/* --- COMPONENTE DE ALERTA RENDERIZADO AQUI --- */}
         <CustomAlert
           visible={alertVisible}
           title={alertConfig.title}
@@ -258,7 +332,8 @@ export default function RecordEditPage() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+  container: { flex: 1 },
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   content: { padding: 24, maxWidth: 500, alignSelf: "center", width: "100%" },
   header: {
     fontSize: 26,
@@ -269,53 +344,45 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#AAA",
     marginBottom: 8,
     textTransform: "uppercase",
   },
   input: {
     borderWidth: 1,
-    borderColor: "#EFEFEF",
     borderRadius: 12,
     padding: 14,
     fontSize: 16,
-    backgroundColor: "#F9F9F9",
     marginBottom: 20,
   },
   customInput: {
     borderWidth: 1,
-    borderColor: "#EFEFEF",
     borderRadius: 12,
     padding: 14,
-    backgroundColor: "#F9F9F9",
     marginBottom: 20,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  inputText: { fontSize: 16, color: "#333" },
+  inputText: { fontSize: 16 },
   row: { flexDirection: "row" },
   flex1: { flex: 1 },
   saveButton: {
-    backgroundColor: "#000",
     padding: 18,
     borderRadius: 15,
     alignItems: "center",
     marginTop: 20,
   },
-  disabledButton: { backgroundColor: "#EEE" },
-  saveText: { color: "#fff", fontWeight: "600" },
+  saveText: { fontWeight: "600" },
   cancelButton: { marginTop: 15, padding: 15, alignItems: "center" },
-  cancelButtonText: { color: "#FF3B30", fontWeight: "600" },
+  cancelButtonText: { fontWeight: "600" },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
+    backgroundColor: "rgba(0,0,0,0.7)",
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
   },
   modalContent: {
-    backgroundColor: "#fff",
     borderRadius: 20,
     width: "100%",
     maxWidth: 350,
@@ -330,10 +397,8 @@ const styles = StyleSheet.create({
   optionButton: {
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: "#F5F5F5",
     flexDirection: "row",
     justifyContent: "space-between",
   },
-  optionText: { fontSize: 16, color: "#666" },
-  optionSelected: { color: "#000", fontWeight: "bold" },
+  optionText: { fontSize: 16 },
 });

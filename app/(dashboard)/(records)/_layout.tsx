@@ -1,13 +1,27 @@
 import { Stack } from "expo-router";
+import { useTheme } from "../../../context/ThemeContext";
 
 export default function Layout() {
+  const { theme } = useTheme();
+
   return (
-    <Stack>
+    <Stack
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: theme.background,
+        },
+        headerTintColor: theme.accent,
+        headerTitleStyle: {
+          fontWeight: "bold",
+          color: theme.textLight,
+        },
+        headerShadowVisible: false,
+      }}
+    >
       <Stack.Screen
         name="index"
         options={{
-          headerShown: true,
-          title: "Registros",
+          headerShown: false,
         }}
       />
 
@@ -15,7 +29,8 @@ export default function Layout() {
         name="add"
         options={{
           headerShown: true,
-          title: "Novo Registro",
+          title: "Nova Tarefa",
+          headerBackTitle: "Voltar",
         }}
       />
 
@@ -23,7 +38,16 @@ export default function Layout() {
         name="edit"
         options={{
           headerShown: true,
-          title: "Editar Registro",
+          title: "Editar Tarefa",
+          headerBackTitle: "Voltar",
+        }}
+      />
+
+      <Stack.Screen
+        name="details"
+        options={{
+          headerShown: true,
+          title: "Detalhes",
         }}
       />
     </Stack>
