@@ -57,10 +57,9 @@ export default function RecordAddPage() {
     tags: "",
     status: "PENDENTE",
     prioridade: "MEDIA",
-    deadline: "", // Formato visual: DD/MM/AAAA
+    deadline: "",
   });
 
-  // Máscara para Data (DD/MM/AAAA)
   const handleDateChange = (text: string) => {
     const cleaned = text.replace(/\D/g, "");
     let formatted = cleaned;
@@ -110,7 +109,6 @@ export default function RecordAddPage() {
       return;
     }
 
-    // Converter DD/MM/AAAA para ISO 8601 (AAAA-MM-DD)
     const dateParts = form.deadline.split("/");
     if (dateParts.length !== 3 || dateParts[2].length !== 4) {
       showAlert("Data Inválida", "Use o formato DD/MM/AAAA", "danger");
@@ -127,7 +125,7 @@ export default function RecordAddPage() {
         prioridade: form.prioridade,
         categoria: form.categoria,
         tags: form.tags ? [form.tags] : ["Geral"],
-        deadline: isoDate, // Enviando formato ISO correto
+        deadline: isoDate,
       });
 
       showAlert("Sucesso", "Tarefa criada!", "default", () => {
