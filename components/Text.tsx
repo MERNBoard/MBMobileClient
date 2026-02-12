@@ -3,7 +3,7 @@ import { StyleProp, StyleSheet, Text, TextStyle } from "react-native";
 
 type TextProps = {
   texto: string;
-  style?: StyleProp<TextStyle>; // Isso permite passar estilos como { color: theme.textPendente }
+  style?: StyleProp<TextStyle>;
 };
 
 export function Title({ texto, style }: TextProps) {

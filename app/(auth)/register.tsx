@@ -2,181 +2,309 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
+  KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import CustomAlert from "../../components/CustomAlert";
+import { useTheme } from "../../context/ThemeContext";
 import api from "../../services/api";
 
 export default function RegisterPage() {
+  const { theme, themeName } = useTheme();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({
+    title: "",
+    message: "",
+    type: "default" as "default" | "danger",
+    onConfirm: () => setAlertVisible(false),
+  });
+
+  const showAlert = (
+    title: string,
+    message: string,
+    type: "default" | "danger" = "default",
+    action?: () => void,
+  ) => {
+    setAlertConfig({
+      title,
+      message,
+      type,
+      onConfirm: action ? action : () => setAlertVisible(false),
+    });
+    setAlertVisible(true);
+  };
+
   const handleRegister = async () => {
-    // 1. Validações básicas
-    if (!nome || !email || !password || !confirmPassword) {
-      Alert.alert("Erro", "Preencha todos os campos obrigatórios.");
+    if (!nome.trim() || !email.trim() || !password || !confirmPassword) {
+      showAlert(
+        "Campos Vazios",
+        "Preencha todos os campos obrigatórios.",
+        "danger",
+      );
+      return;
+    }
+
+    const emailRegex = /\S+@\S+\.\S+/;
+    if (!emailRegex.test(email.trim())) {
+      showAlert(
+        "E-mail Inválido",
+        "O formato do e-mail digitado não é válido.",
+        "danger",
+      );
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert("Erro", "As senhas não coincidem.");
+      showAlert("Senhas Diferentes", "As senhas não coincidem.", "danger");
       return;
     }
 
     setLoading(true);
     try {
-      // 2. Chamada para a rota de registro da documentação
       await api.post("/auth/registrar", {
-        nome: nome,
+        nome: nome.trim(),
         email: email.toLowerCase().trim(),
         password: password,
       });
 
-      // 3. Sucesso!
-      Alert.alert("Sucesso!", "Conta criada. Agora faça login para acessar.", [
-        { text: "OK", onPress: () => router.replace("/(auth)") },
-      ]);
+      showAlert(
+        "Sucesso!",
+        "Conta criada com sucesso. Agora faça login para acessar.",
+        "default",
+        () => {
+          setAlertVisible(false);
+          router.replace("/(auth)");
+        },
+      );
     } catch (error: any) {
-      console.error(error);
-      const errorMessage =
-        error.response?.data?.error || "Erro ao criar conta.";
-      Alert.alert("Erro no Cadastro", errorMessage);
+      let title = "Erro no Cadastro";
+      let message = "Não foi possível criar sua conta agora.";
+
+      if (error.response) {
+        title = "Aviso";
+        message =
+          error.response.data?.error ||
+          error.response.data?.message ||
+          "Erro ao processar dados.";
+      } else if (error.request) {
+        title = "Falha de Conexão";
+        message = "O servidor não respondeu. Verifique sua internet.";
+      }
+
+      showAlert(title, message, "danger");
+      console.warn("Register Error:", error.message);
     } finally {
       setLoading(false);
     }
   };
 
+  const isEsmeralda = themeName === "esmeralda";
+  const mainTextColor = theme.textLight || "#FFFFFF";
+
+  const highlightColor = isEsmeralda ? theme.textPendente : theme.accent;
+
+  const inputBackground =
+    theme.input || (themeName === "dark" ? "#1A1A1A" : "#F5F5F7");
+  const contrastBorder =
+    theme.detail || (themeName === "dark" ? "#333" : "#D0D0D0");
+
   return (
-    <View style={styles.container}>
-      <View style={{ width: "85%", maxWidth: 400 }}>
-        <Text style={styles.title}>Registrar-se</Text>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={[styles.container, { backgroundColor: theme.background }]}
+    >
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.card}>
+          <Text style={[styles.title, { color: highlightColor }]}>
+            Cadastro
+          </Text>
 
-        <TouchableOpacity onPress={() => router.push("/(auth)")}>
-          <Text style={styles.subtitle}>Já tem conta? Faça login</Text>
-        </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push("/(auth)")}>
+            <Text style={[styles.subtitle, { color: theme.textLight + "CC" }]}>
+              Já tem conta?{" "}
+              <Text style={[styles.boldUnderline, { color: highlightColor }]}>
+                Faça login
+              </Text>
+            </Text>
+          </TouchableOpacity>
 
-        <View style={styles.line} />
+          <View style={[styles.line, { backgroundColor: highlightColor }]} />
 
-        <View>
-          <Text style={styles.text}>Nome Completo:</Text>
-          <TextInput
-            placeholder="Digite seu nome completo"
-            style={styles.input}
-            value={nome}
-            onChangeText={setNome}
-            placeholderTextColor="#999"
-          />
+          <View style={styles.form}>
+            <Text style={[styles.label, { color: highlightColor }]}>
+              Nome Completo:
+            </Text>
+            <TextInput
+              placeholder="Digite seu nome"
+              style={[
+                styles.input,
+                {
+                  backgroundColor: inputBackground,
+                  color: mainTextColor,
+                  borderColor: contrastBorder,
+                },
+              ]}
+              value={nome}
+              onChangeText={setNome}
+              placeholderTextColor="#777"
+            />
 
-          <Text style={styles.text}>E-mail:</Text>
-          <TextInput
-            placeholder="Digite seu email"
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            placeholderTextColor="#999"
-          />
+            <Text style={[styles.label, { color: highlightColor }]}>
+              E-mail:
+            </Text>
+            <TextInput
+              placeholder="seu@email.com"
+              style={[
+                styles.input,
+                {
+                  backgroundColor: inputBackground,
+                  color: mainTextColor,
+                  borderColor: contrastBorder,
+                },
+              ]}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              placeholderTextColor="#777"
+            />
 
-          <Text style={styles.text}>Sua senha:</Text>
-          <TextInput
-            placeholder="No mínimo 6 caracteres"
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            placeholderTextColor="#999"
-          />
+            <Text style={[styles.label, { color: highlightColor }]}>
+              Sua senha:
+            </Text>
+            <TextInput
+              placeholder="No mínimo 6 caracteres"
+              style={[
+                styles.input,
+                {
+                  backgroundColor: inputBackground,
+                  color: mainTextColor,
+                  borderColor: contrastBorder,
+                },
+              ]}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              placeholderTextColor="#777"
+            />
 
-          <Text style={styles.text}>Confirme sua senha:</Text>
-          <TextInput
-            placeholder="Repita a senha digitada"
-            style={styles.input}
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
-            placeholderTextColor="#999"
-          />
+            <Text style={[styles.label, { color: highlightColor }]}>
+              Confirme sua senha:
+            </Text>
+            <TextInput
+              placeholder="Repita a senha"
+              style={[
+                styles.input,
+                {
+                  backgroundColor: inputBackground,
+                  color: mainTextColor,
+                  borderColor: contrastBorder,
+                },
+              ]}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry
+              placeholderTextColor="#777"
+            />
+          </View>
+
+          <View style={styles.buttonContainer}>
+            {loading ? (
+              <ActivityIndicator size="large" color={theme.accent} />
+            ) : (
+              <TouchableOpacity
+                style={[
+                  styles.registerButton,
+                  { backgroundColor: theme.accent },
+                ]}
+                onPress={handleRegister}
+              >
+                <Text style={styles.registerButtonText}>CRIAR MINHA CONTA</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
+      </ScrollView>
 
-        <View style={{ marginTop: 10 }}>
-          {loading ? (
-            <ActivityIndicator size="large" color="#fff" />
-          ) : (
-            <TouchableOpacity
-              style={styles.registerButton}
-              onPress={handleRegister}
-            >
-              <Text style={styles.registerButtonText}>Criar minha conta</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-    </View>
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        onConfirm={alertConfig.onConfirm}
+        onCancel={() => setAlertVisible(false)}
+        confirmText="OK"
+      />
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#21155d",
+  container: { flex: 1 },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
     alignItems: "center",
-    paddingTop: 40,
+    paddingVertical: 40,
   },
+  card: { width: "85%", maxWidth: 400 },
   title: {
-    color: "#fff",
-    fontSize: 30,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginTop: 60,
-    marginBottom: 10,
-  },
-  text: {
-    color: "#f2e7fe",
+    fontSize: 42,
+    fontWeight: "900",
+    textAlign: "left",
     marginBottom: 5,
-    fontSize: 14,
   },
-  subtitle: {
-    color: "#f2e7fe",
-    fontSize: 14,
-    textAlign: "center",
-    marginBottom: 20,
-    textDecorationLine: "underline",
-  },
-  line: {
-    width: "100%",
-    height: 1,
-    backgroundColor: "#bebdda",
-    marginBottom: 25,
+  subtitle: { fontSize: 14, marginBottom: 20 },
+  boldUnderline: { fontWeight: "bold", textDecorationLine: "underline" },
+  line: { width: 60, height: 6, borderRadius: 3, marginBottom: 35 },
+  form: { width: "100%" },
+  label: {
+    fontSize: 13,
+    fontWeight: "bold",
+    marginBottom: 6,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   input: {
-    backgroundColor: "#fff",
-    padding: 12,
-    borderRadius: 8,
+    padding: 16,
+    borderRadius: 12,
     fontSize: 16,
     marginBottom: 15,
-    ...Platform.select({
-      web: { outlineStyle: "none" } as any,
-    }),
+    borderWidth: 1.2,
+    ...Platform.select({ web: { outlineStyle: "none" } as any }),
   },
+  buttonContainer: { marginTop: 10, width: "100%" },
   registerButton: {
-    backgroundColor: "#00c853",
-    padding: 15,
-    borderRadius: 8,
+    width: "100%",
+    padding: 18,
+    borderRadius: 12,
     alignItems: "center",
-    marginBottom: 40,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+    marginBottom: 20,
   },
   registerButtonText: {
     color: "#fff",
-    fontWeight: "bold",
+    fontWeight: "900",
     fontSize: 16,
+    letterSpacing: 1,
   },
 });

@@ -6,7 +6,7 @@ import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 type TwoComponentsProps = {
   componente01?: React.ReactNode;
   componente02?: React.ReactNode;
-  style?: StyleProp<ViewStyle>; // Adicionado para aceitar estilo de fora
+  style?: StyleProp<ViewStyle>;
 };
 
 type FourComponentsProps = {
@@ -21,11 +21,9 @@ type FourComponentsProps = {
 export function Header({
   componente01,
   componente02,
-  style, // Recebe o estilo aqui
+  style,
 }: TwoComponentsProps) {
   return (
-    // O array [styles.header, style] permite que o style vindo do Dashboard
-    // (com as cores pastel) substitua o branco padrão.
     <View style={[styles.header, style]}>
       {componente01}
       {componente02}
@@ -40,7 +38,6 @@ export function Body({
   style,
 }: TwoComponentsProps) {
   return (
-    // Removi a cor fixa para ele herdar o fundo do tema ou o que você passar
     <View style={[styles.body, style]}>
       {componente01}
       {componente02}
@@ -72,14 +69,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#ffffff", // Cor padrão (será sobrescrita se passar style)
+    backgroundColor: "#ffffff",
     padding: 20,
-    borderRadius: 12, // Adicionei um arredondamento padrão para ficar mais moderno
+    borderRadius: 12,
   },
 
   body: {
     flex: 1,
-    // backgroundColor: "#f2e7fe", <-- Removido cor fixa para não brigar com o tema
     padding: 20,
   },
 

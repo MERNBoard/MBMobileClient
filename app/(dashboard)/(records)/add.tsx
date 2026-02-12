@@ -1,11 +1,8 @@
-import { Octicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -15,52 +12,111 @@ import {
   View,
 } from "react-native";
 
+import { Body } from "@/components/Layout";
+import OptionSelector from "@/components/OptionSelector";
+import { Texto, Title } from "@/components/Text";
+
+import CustomAlert from "../../../components/CustomAlert";
+import { useTheme } from "../../../context/ThemeContext";
 import api from "../../../services/api";
 
-type FormKeys = "status" | "prioridade" | "tag" | "category";
-
 export default function RecordAddPage() {
+  const { theme, themeName } = useTheme();
   const [loading, setLoading] = useState(false);
+
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({
+    title: "",
+    message: "",
+    type: "default" as "default" | "danger",
+    onConfirm: () => setAlertVisible(false),
+    confirmText: "Ok",
+  });
+
+  const showAlert = (
+    title: string,
+    message: string,
+    type: "default" | "danger" = "default",
+    action?: () => void,
+    confirmText: string = "Ok",
+  ) => {
+    setAlertConfig({
+      title,
+      message,
+      type,
+      onConfirm: action ? action : () => setAlertVisible(false),
+      confirmText,
+    });
+    setAlertVisible(true);
+  };
 
   const [form, setForm] = useState({
     titulo: "",
     descricao: "",
+    categoria: "Geral",
+    tags: "",
     status: "PENDENTE",
     prioridade: "MEDIA",
-    category: "Geral",
-    tag: "Trabalho",
-    deadline: "",
+    deadline: "", // Formato visual: DD/MM/AAAA
   });
 
-  const [pickerVisible, setPickerVisible] = useState(false);
-  const [activeField, setActiveField] = useState<FormKeys | null>(null);
-
-  const options = {
-    status: ["PENDENTE", "EM_ANDAMENTO", "CONCLUIDA"],
-    prioridade: ["BAIXA", "MEDIA", "ALTA"],
-    tag: ["Trabalho", "Estudo", "Pessoal", "Importante"],
-    category: ["Design", "Dev", "Financeiro", "Geral"],
+  // Máscara para Data (DD/MM/AAAA)
+  const handleDateChange = (text: string) => {
+    const cleaned = text.replace(/\D/g, "");
+    let formatted = cleaned;
+    if (cleaned.length > 2)
+      formatted = `${cleaned.slice(0, 2)}/${cleaned.slice(2)}`;
+    if (cleaned.length > 4)
+      formatted = `${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}/${cleaned.slice(4, 8)}`;
+    updateForm("deadline", formatted);
   };
 
-  const updateForm = (key: string, value: string) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+  const updateForm = (campo: string, valor: string) => {
+    setForm((prev) => ({ ...prev, [campo]: valor }));
   };
 
-  const openPicker = (field: FormKeys) => {
-    setActiveField(field);
-    setPickerVisible(true);
-  };
+  const handleCancel = () => {
+    const hasData =
+      form.titulo.trim() !== "" ||
+      form.descricao.trim() !== "" ||
+      form.deadline.trim() !== "" ||
+      form.tags.trim() !== "" ||
+      form.categoria !== "Geral";
 
-  const selectOption = (value: string) => {
-    if (activeField) updateForm(activeField, value);
-    setPickerVisible(false);
+    if (hasData) {
+      showAlert(
+        "Descartar?",
+        "Deseja realmente cancelar?",
+        "danger",
+        () => {
+          setAlertVisible(false);
+          router.back();
+        },
+        "Sim, cancelar",
+      );
+    } else {
+      router.back();
+    }
   };
 
   const handleSave = async () => {
-    if (!form.titulo.trim()) {
-      Alert.alert("Atenção", "Por favor, insira ao menos um título.");
+    // Validações básicas
+    if (
+      !form.titulo.trim() ||
+      !form.descricao.trim() ||
+      !form.deadline.trim()
+    ) {
+      showAlert("Atenção", "Preencha Título, Descrição e Data.", "danger");
       return;
     }
+
+    // Converter DD/MM/AAAA para ISO 8601 (AAAA-MM-DD)
+    const dateParts = form.deadline.split("/");
+    if (dateParts.length !== 3 || dateParts[2].length !== 4) {
+      showAlert("Data Inválida", "Use o formato DD/MM/AAAA", "danger");
+      return;
+    }
+    const isoDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}T23:59:59.000Z`;
 
     setLoading(true);
     try {
@@ -69,232 +125,235 @@ export default function RecordAddPage() {
         descricao: form.descricao,
         status: form.status,
         prioridade: form.prioridade,
-        categoria: form.category,
-        tags: [form.tag],
-        deadline: form.deadline || null,
+        categoria: form.categoria,
+        tags: form.tags ? [form.tags] : ["Geral"],
+        deadline: isoDate, // Enviando formato ISO correto
       });
 
-      Alert.alert("Sucesso", "Tarefa criada com sucesso!");
-      router.replace("/(dashboard)/(records)");
+      showAlert("Sucesso", "Tarefa criada!", "default", () => {
+        setAlertVisible(false);
+        router.replace("/(dashboard)/(records)");
+      });
     } catch (error: any) {
-      console.error(error);
-      Alert.alert("Erro", "Não foi possível criar a tarefa.");
+      const msg =
+        error.response?.data?.error || "Erro ao conectar com o servidor.";
+      showAlert("Erro", msg, "danger");
     } finally {
       setLoading(false);
     }
   };
 
-  const CustomPickerTrigger = ({
-    label,
-    value,
-    field,
-  }: {
-    label: string;
-    value: string;
-    field: FormKeys;
-  }) => (
-    <View style={styles.flex1}>
-      <Text style={styles.label}>{label}</Text>
-      <TouchableOpacity
-        style={styles.customInput}
-        onPress={() => openPicker(field)}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.inputText}>{value}</Text>
-        <Octicons name="chevron-down" size={16} color="#AAA" />
-      </TouchableOpacity>
-    </View>
-  );
+  const inputBg = theme.input || (themeName === "dark" ? "#252525" : "#E8E8E8");
+  const contrastBorder = theme.detail || "#333";
+  const textColor = theme.textLight || "#FFFFFF";
+  const accentColor = theme.accent || "#60439f";
+  const labelColor =
+    themeName === "esmeralda" ? theme.textPendente : accentColor;
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
-      >
-        <Text style={styles.header}>Nova Tarefa</Text>
-
-        <Text style={styles.label}>Título da Tarefa</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="O que precisa ser feito?"
-          value={form.titulo}
-          onChangeText={(v) => updateForm("titulo", v)}
-        />
-
-        <Text style={styles.label}>Descrição (Opcional)</Text>
-        <TextInput
-          style={[styles.input, { height: 80, textAlignVertical: "top" }]}
-          placeholder="Detalhes sobre a tarefa..."
-          multiline
-          value={form.descricao}
-          onChangeText={(v) => updateForm("descricao", v)}
-        />
-
-        <View style={styles.row}>
-          <CustomPickerTrigger
-            label="Status"
-            value={form.status}
-            field="status"
-          />
-          <View style={{ width: 12 }} />
-          <CustomPickerTrigger
-            label="Prioridade"
-            value={form.prioridade}
-            field="prioridade"
-          />
-        </View>
-
-        <View style={styles.row}>
-          <CustomPickerTrigger label="Tag" value={form.tag} field="tag" />
-          <View style={{ width: 12 }} />
-          <View style={styles.flex1}>
-            <Text style={styles.label}>Prazo</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="AAAA-MM-DD"
-              value={form.deadline}
-              onChangeText={(v) => updateForm("deadline", v)}
-            />
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={[styles.saveButton, loading && styles.disabledButton]}
-          onPress={handleSave}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.saveText}>Criar Tarefa</Text>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.cancelButton}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.cancelButtonText}>Cancelar</Text>
-        </TouchableOpacity>
-
-        {/* Modal de Seleção */}
-        <Modal visible={pickerVisible} transparent animationType="fade">
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setPickerVisible(false)}
+      <Body
+        componente01={
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContainer}
           >
-            <View style={styles.modalContent}>
-              <Text style={styles.modalHeader}>Selecione uma opção</Text>
-              {activeField &&
-                options[activeField].map((opt) => (
-                  <TouchableOpacity
-                    key={opt}
-                    style={styles.optionButton}
-                    onPress={() => selectOption(opt)}
-                  >
-                    <Text
-                      style={[
-                        styles.optionText,
-                        form[activeField] === opt && styles.optionSelected,
-                      ]}
-                    >
-                      {opt}
-                    </Text>
-                    {form[activeField] === opt && (
-                      <Octicons name="check" size={16} color="#000" />
-                    )}
-                  </TouchableOpacity>
-                ))}
+            <View style={styles.formWrapper}>
+              <View style={{ marginBottom: 25 }}>
+                <Title texto="Nova Tarefa" style={{ color: labelColor }} />
+              </View>
+
+              <Texto
+                texto="Título"
+                style={{ color: labelColor, fontWeight: "bold" }}
+              />
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: inputBg,
+                    color: textColor,
+                    borderColor: contrastBorder,
+                  },
+                ]}
+                placeholder="Nome da tarefa"
+                placeholderTextColor="#666"
+                value={form.titulo}
+                onChangeText={(v) => updateForm("titulo", v)}
+              />
+
+              <Texto
+                texto="Descrição"
+                style={{ color: labelColor, fontWeight: "bold" }}
+              />
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: inputBg,
+                    color: textColor,
+                    borderColor: contrastBorder,
+                    height: 80,
+                    textAlignVertical: "top",
+                  },
+                ]}
+                placeholder="Detalhes..."
+                placeholderTextColor="#666"
+                multiline
+                value={form.descricao}
+                onChangeText={(v) => updateForm("descricao", v)}
+              />
+
+              <View style={styles.row}>
+                <View style={{ flex: 1, marginRight: 10 }}>
+                  <Texto
+                    texto="Categoria"
+                    style={{ color: labelColor, fontWeight: "bold" }}
+                  />
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: inputBg,
+                        color: textColor,
+                        borderColor: contrastBorder,
+                      },
+                    ]}
+                    placeholder="Geral"
+                    placeholderTextColor="#666"
+                    value={form.categoria}
+                    onChangeText={(v) => updateForm("categoria", v)}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Texto
+                    texto="Data Limite"
+                    style={{ color: labelColor, fontWeight: "bold" }}
+                  />
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: inputBg,
+                        color: textColor,
+                        borderColor: contrastBorder,
+                      },
+                    ]}
+                    placeholder="DD/MM/AAAA"
+                    placeholderTextColor="#666"
+                    keyboardType="numeric"
+                    maxLength={10}
+                    value={form.deadline}
+                    onChangeText={handleDateChange}
+                  />
+                </View>
+              </View>
+
+              <Texto
+                texto="Tag"
+                style={{ color: labelColor, fontWeight: "bold" }}
+              />
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: inputBg,
+                    color: textColor,
+                    borderColor: contrastBorder,
+                  },
+                ]}
+                placeholder="Ex: Trabalho"
+                placeholderTextColor="#666"
+                value={form.tags}
+                onChangeText={(v) => updateForm("tags", v)}
+              />
+
+              <View style={styles.row}>
+                <View style={{ flex: 1, marginRight: 10 }}>
+                  <OptionSelector
+                    label="Status"
+                    options={["PENDENTE", "EM_ANDAMENTO", "CONCLUIDA"]}
+                    selected={form.status}
+                    onSelect={(v) => updateForm("status", v)}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <OptionSelector
+                    label="Prioridade"
+                    options={["BAIXA", "MEDIA", "ALTA"]}
+                    selected={form.prioridade}
+                    onSelect={(v) => updateForm("prioridade", v)}
+                  />
+                </View>
+              </View>
+
+              <View style={[styles.row, { marginTop: 25, gap: 10 }]}>
+                <TouchableOpacity
+                  onPress={handleCancel}
+                  style={[styles.actionBtn, styles.cancelBtn]}
+                >
+                  <Text style={styles.cancelText}>CANCELAR</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={handleSave}
+                  disabled={loading}
+                  style={[
+                    styles.actionBtn,
+                    { backgroundColor: accentColor, flex: 2 },
+                  ]}
+                >
+                  {loading ? (
+                    <ActivityIndicator size="small" color="#FFF" />
+                  ) : (
+                    <Text style={styles.saveText}>CRIAR TAREFA</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
-          </TouchableOpacity>
-        </Modal>
-      </ScrollView>
+          </ScrollView>
+        }
+        componente02={null}
+      />
+
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        onConfirm={alertConfig.onConfirm}
+        onCancel={() => setAlertVisible(false)}
+        confirmText={alertConfig.confirmText}
+        cancelText="Voltar"
+      />
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
-  content: { padding: 24, maxWidth: 500, alignSelf: "center", width: "100%" },
-  header: {
-    fontSize: 26,
-    fontWeight: "bold",
-    marginBottom: 30,
-    letterSpacing: -0.5,
+  scrollContainer: { paddingBottom: 40, alignItems: "center" },
+  formWrapper: {
+    width: "100%",
+    maxWidth: 600,
+    paddingHorizontal: 20,
+    paddingTop: 30,
   },
-  label: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#AAA",
-    marginBottom: 8,
-    textTransform: "uppercase",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#EFEFEF",
-    borderRadius: 12,
-    padding: 14,
-    fontSize: 16,
-    backgroundColor: "#F9F9F9",
-    marginBottom: 20,
-  },
-  customInput: {
-    borderWidth: 1,
-    borderColor: "#EFEFEF",
-    borderRadius: 12,
-    padding: 14,
-    backgroundColor: "#F9F9F9",
-    marginBottom: 20,
+  input: { borderRadius: 12, padding: 15, marginBottom: 20, borderWidth: 1.2 },
+  row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-end",
   },
-  inputText: { fontSize: 16, color: "#333" },
-  row: { flexDirection: "row" },
-  flex1: { flex: 1 },
-  saveButton: {
-    backgroundColor: "#000",
-    padding: 18,
-    borderRadius: 15,
-    alignItems: "center",
-    marginTop: 20,
-  },
-  disabledButton: { backgroundColor: "#EEE" },
-  saveText: { color: "#fff", fontWeight: "600" },
-  cancelButton: { marginTop: 15, padding: 15, alignItems: "center" },
-  cancelButtonText: { color: "#FF3B30", fontWeight: "600" },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
+  actionBtn: {
+    height: 50,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
   },
-  modalContent: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    width: "100%",
-    maxWidth: 350,
-    padding: 20,
-  },
-  modalHeader: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  optionButton: {
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F5F5F5",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  optionText: { fontSize: 16, color: "#666" },
-  optionSelected: { color: "#000", fontWeight: "bold" },
+  cancelBtn: { flex: 1, borderWidth: 1.5, borderColor: "#FF4444" },
+  cancelText: { color: "#FF4444", fontWeight: "bold", fontSize: 14 },
+  saveText: { color: "#FFF", fontWeight: "bold", fontSize: 14 },
 });

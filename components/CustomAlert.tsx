@@ -29,15 +29,16 @@ export default function CustomAlert({
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
         <View style={[styles.content, { backgroundColor: theme.primary }]}>
-          {" "}
           <Text style={[styles.title, { color: theme.textLight }]}>
             {title}
-          </Text>{" "}
+          </Text>
+
           <Text
             style={[styles.message, { color: theme.textLight, opacity: 0.7 }]}
           >
             {message}
-          </Text>{" "}
+          </Text>
+
           <View style={styles.buttons}>
             <TouchableOpacity
               style={[
@@ -50,7 +51,7 @@ export default function CustomAlert({
                 style={[styles.btnTextSecondary, { color: theme.textLight }]}
               >
                 {cancelText}
-              </Text>{" "}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -65,7 +66,7 @@ export default function CustomAlert({
                 style={[styles.btnTextPrimary, { color: theme.background }]}
               >
                 {confirmText}
-              </Text>{" "}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -77,7 +78,7 @@ export default function CustomAlert({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)", // Mudou: Levemente mais escuro para destacar no dark mode
+    backgroundColor: "rgba(0,0,0,0.7)",
     justifyContent: "center",
     alignItems: "center",
     padding: 25,
@@ -118,7 +119,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     minHeight: 50,
-    minWidth: 100,
   },
   btnSecondary: {
     flex: 1,
@@ -127,8 +127,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     minHeight: 50,
-    minWidth: 100,
   },
-  btnTextPrimary: { fontWeight: "600", fontSize: 15 },
-  btnTextSecondary: { fontWeight: "600", fontSize: 15, opacity: 0.8 },
+  btnTextPrimary: { fontWeight: "bold", fontSize: 15 },
+  btnTextSecondary: { fontWeight: "600", fontSize: 15, opacity: 0.9 },
 });

@@ -1,4 +1,11 @@
+import Entypo from "@expo/vector-icons/Entypo";
+import Foundation from "@expo/vector-icons/Foundation";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import Octicons from "@expo/vector-icons/Octicons";
+import SimpleLineIcons from "@expo/vector-icons/SimpleLineIcons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
+
 import React, { useState } from "react";
 import {
   ScrollView,
@@ -27,9 +34,22 @@ export default function SettingsPage() {
     setAlertVisible(true);
   };
 
-  const confirmLogout = () => {
-    setAlertVisible(false);
-    console.log("Lógica de logout aqui");
+  const confirmLogout = async () => {
+    try {
+      setAlertVisible(false);
+
+      setAlertVisible(false);
+      // 1. Remove o Token e os dados do usuário
+      // Usei multiRemove para limpar as chaves específicas que criamos no Login
+      await AsyncStorage.multiRemove(["@MBToken", "user"]);
+
+      // 2. Redireciona para a tela de autenticação
+      // O replace impede que o usuário use o botão "voltar" para entrar no app novamente
+      router.replace("/(auth)");
+    } catch (error) {
+      console.error("Erro ao sair:", error);
+      alert("Erro ao encerrar a sessão. Tente novamente.");
+    }
   };
 
   const MenuItem = ({
@@ -51,7 +71,12 @@ export default function SettingsPage() {
             { backgroundColor: theme.accent + "20" },
           ]}
         >
-          <Octicons name={icon} size={20} color={theme.accent} />
+          {/* Lógica para suportar o ícone de Aparência da Ionicons e manter Octicons nos outros */}
+          {title === "Aparência" ? (
+            <Ionicons name="color-palette" size={20} color={theme.accent} />
+          ) : (
+            <Octicons name={icon} size={20} color={theme.accent} />
+          )}
         </View>
         <View style={{ marginLeft: 15 }}>
           <Text style={[styles.menuItemTitle, { color }]}>{title}</Text>
@@ -134,7 +159,7 @@ export default function SettingsPage() {
             Customização
           </Text>
           <MenuItem
-            icon="paintcan"
+            icon="color-mode"
             title="Aparência"
             subtitle={`Tema: ${themeName}`}
             onPress={() => setView("themes")}
@@ -142,7 +167,7 @@ export default function SettingsPage() {
           <MenuItem
             icon="graph"
             title="Visualização de Dados"
-            subtitle={`Gráfico: ${tipoGrafico}`}
+            subtitle={`Estilo: ${tipoGrafico}`}
             onPress={() => setView("charts")}
           />
         </View>
@@ -209,10 +234,12 @@ export default function SettingsPage() {
         <ScrollView contentContainerStyle={{ padding: 20 }}>
           <View style={styles.grid}>
             {[
-              { id: "pizza", icon: "pie-chart", label: "Pizza" },
-              { id: "barras", icon: "columns", label: "Barras" },
-              { id: "linhas", icon: "graph", label: "Linhas" },
-              { id: "area", icon: "pulse", label: "Área" },
+              { id: "pizza_donut", label: "Rosquinha" },
+              { id: "pizza_solid", label: "Pizza Fatias" },
+              { id: "barra_vertical", label: "Vertical" },
+              { id: "barra_lateral", label: "Horizontal" },
+              { id: "linhas", label: "Linhas" },
+              { id: "area", label: "Área" },
             ].map((item) => (
               <TouchableOpacity
                 key={item.id}
@@ -229,64 +256,46 @@ export default function SettingsPage() {
                     backgroundColor: theme.primary + "60",
                   },
                 ]}
-                onPress={() =>
-                  setTipoGrafico(
-                    item.id as "pizza" | "barras" | "linhas" | "area",
-                  )
-                }
+                onPress={() => setTipoGrafico(item.id as any)}
               >
                 <View style={styles.previewBox}>
-                  {item.id === "pizza" && (
-                    <View
-                      style={[
-                        styles.miniPie,
-                        {
-                          borderColor: theme.accent,
-                          borderLeftColor: theme.secondary,
-                          borderBottomColor: theme.detail,
-                        },
-                      ]}
+                  {item.id === "pizza_donut" && (
+                    <Entypo
+                      name="circular-graph"
+                      size={30}
+                      color={theme.accent}
                     />
                   )}
-                  {item.id === "barras" && (
-                    <View style={styles.barRow}>
-                      <View
-                        style={[
-                          styles.miniBar,
-                          {
-                            width: 10,
-                            height: 15,
-                            backgroundColor: theme.accent,
-                          },
-                        ]}
-                      />
-                      <View
-                        style={[
-                          styles.miniBar,
-                          {
-                            width: 10,
-                            height: 25,
-                            backgroundColor: theme.secondary,
-                          },
-                        ]}
-                      />
-                      <View
-                        style={[
-                          styles.miniBar,
-                          {
-                            width: 10,
-                            height: 20,
-                            backgroundColor: theme.detail,
-                          },
-                        ]}
-                      />
-                    </View>
+                  {item.id === "pizza_solid" && (
+                    <Foundation
+                      name="graph-pie"
+                      size={30}
+                      color={theme.accent}
+                    />
+                  )}
+                  {item.id === "barra_vertical" && (
+                    <Foundation
+                      name="graph-bar"
+                      size={30}
+                      color={theme.accent}
+                    />
+                  )}
+                  {item.id === "barra_lateral" && (
+                    <Foundation
+                      name="graph-horizontal"
+                      size={30}
+                      color={theme.accent}
+                    />
                   )}
                   {item.id === "linhas" && (
-                    <Octicons name="graph" size={30} color={theme.accent} />
+                    <SimpleLineIcons
+                      name="graph"
+                      size={30}
+                      color={theme.accent}
+                    />
                   )}
                   {item.id === "area" && (
-                    <Octicons name="pulse" size={30} color={theme.detail} />
+                    <Entypo name="area-graph" size={30} color={theme.accent} />
                   )}
                 </View>
                 <Text style={[styles.cardText, { color: theme.textLight }]}>
@@ -463,9 +472,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   previewBox: { height: 50, justifyContent: "center", marginBottom: 10 },
-  miniPie: { width: 35, height: 35, borderRadius: 18, borderWidth: 6 },
-  barRow: { flexDirection: "row", alignItems: "flex-end", height: 30, gap: 4 },
-  miniBar: { borderRadius: 2 },
   checkIcon: { position: "absolute", top: 8, right: 8 },
   backButton: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
   backText: { marginLeft: 8, fontSize: 16, fontWeight: "600" },

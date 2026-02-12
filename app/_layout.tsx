@@ -18,34 +18,46 @@ function AppContent() {
     const syncNativeBars = async () => {
       if (Platform.OS === "android") {
         try {
+          // Garante que a barra seja visível e não translúcida
+          await NavigationBar.setVisibilityAsync("visible");
+          await NavigationBar.setPositionAsync("relative");
+
+          // Aplica a cor do seu tema
           await NavigationBar.setBackgroundColorAsync(theme.background);
+
+          // Ajusta a cor dos ícones (voltar/home)
           await NavigationBar.setButtonStyleAsync(
             isDarkMode ? "light" : "dark",
           );
         } catch (e) {
-          console.warn(e);
+          console.warn("Erro na NavigationBar:", e);
         }
       }
     };
 
     syncNativeBars();
-  }, [theme, isDarkMode]);
+  }, [theme.background, isDarkMode]);
 
   const CustomNavTheme = {
     ...DefaultTheme,
     colors: {
       ...DefaultTheme.colors,
-      background: theme.background,
-      card: theme.primary,
-      text: theme.textLight,
-      border: theme.secondary,
+      background: theme?.background || "#000",
+      card: theme?.primary || "#121212",
+      text: theme?.textLight || "#fff",
+      border: theme?.secondary || "#333",
+      primary: theme?.accent || "#6200ee",
     },
   };
 
   return (
     <NavigationProvider value={CustomNavTheme}>
       <View style={{ flex: 1, backgroundColor: theme.background }}>
-        <StatusBar style={isDarkMode ? "light" : "dark"} />
+        <StatusBar
+          style={isDarkMode ? "light" : "dark"}
+          backgroundColor={theme.background}
+          translucent={false}
+        />
 
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" />

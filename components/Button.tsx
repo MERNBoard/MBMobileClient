@@ -1,5 +1,6 @@
 import React from "react";
-import { TouchableOpacity, Text, StyleSheet } from "react-native";
+import { StyleSheet, Text, TouchableOpacity } from "react-native";
+import { useTheme } from "../context/ThemeContext";
 
 type ButtonProps = {
   text: string;
@@ -7,29 +8,36 @@ type ButtonProps = {
 };
 
 export function ButtonColorido({ text, onPress }: ButtonProps) {
+  const { theme } = useTheme();
+
   return (
-    <TouchableOpacity style={styles.button} onPress={onPress}>
-      <Text style={styles.text}>{text}</Text>
+    <TouchableOpacity
+      style={[styles.button, { backgroundColor: theme.accent }]}
+      onPress={onPress}
+    >
+      {}
+      <Text style={[styles.text, { color: "#FFFFFF" }]}>{text}</Text>
     </TouchableOpacity>
   );
 }
 
 export function ButtonTransparente({ text, onPress }: ButtonProps) {
+  const { theme } = useTheme();
+
   return (
     <TouchableOpacity
-      style={styles.buttonTransparente}
+      style={[styles.buttonTransparente, { borderColor: theme.accent }]}
       onPress={onPress}
     >
-      <Text style={styles.text}>{text}</Text>
+      <Text style={[styles.text, { color: theme.accent }]}>{text}</Text>
     </TouchableOpacity>
   );
 }
 
-// -------------------------------------------------------- Estilos para os botões
+// -------------------------------------------------------- Estilos
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: "#bb86fc",
     padding: 12,
     borderRadius: 8,
     alignItems: "center",
@@ -42,13 +50,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     marginVertical: 8,
-    borderWidth: 1,
-    borderColor: "#bb86fc",
+    borderWidth: 1.5,
   },
 
   text: {
-    color: "#60439f",
-    fontSize: 11,
-    fontWeight: "bold",
+    fontSize: 13,
+    fontWeight: "900",
+    textTransform: "uppercase",
   },
 });

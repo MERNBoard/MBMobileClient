@@ -1,11 +1,8 @@
-import { Octicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -14,14 +11,17 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
+import { Body } from "@/components/Layout";
+import OptionSelector from "@/components/OptionSelector";
+import { Texto, Title } from "@/components/Text";
+
 import CustomAlert from "../../../components/CustomAlert";
 import { useTheme } from "../../../context/ThemeContext";
 import api from "../../../services/api";
 
-type FormKeys = "status" | "prioridade" | "tag" | "category";
-
 export default function RecordEditPage() {
-  const { theme } = useTheme();
+  const { theme, themeName } = useTheme();
   const { id } = useLocalSearchParams();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -55,14 +55,23 @@ export default function RecordEditPage() {
     setAlertVisible(true);
   };
 
-  const [pickerVisible, setPickerVisible] = useState(false);
-  const [activeField, setActiveField] = useState<FormKeys | null>(null);
+  const formatIsoToBr = (isoDate: string) => {
+    if (!isoDate) return "";
+    const date = isoDate.split("T")[0];
+    const [year, month, day] = date.split("-");
+    return `${day}/${month}/${year}`;
+  };
 
-  const options = {
-    status: ["PENDENTE", "EM_ANDAMENTO", "CONCLUIDA"],
-    prioridade: ["BAIXA", "MEDIA", "ALTA"],
-    tag: ["Trabalho", "Estudo", "Pessoal", "Importante"],
-    category: ["Design", "Dev", "Financeiro", "Geral"],
+  const handleDateChange = (text: string) => {
+    const cleaned = text.replace(/\D/g, "");
+    let formatted = cleaned;
+    if (cleaned.length > 2)
+      formatted = `${cleaned.slice(0, 2)}/${cleaned.slice(2)}`;
+    if (cleaned.length > 4)
+      formatted = `${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}/${cleaned.slice(4, 8)}`;
+
+    setForm((prev) => ({ ...prev, deadline: formatted }));
+    setHasChanges(true);
   };
 
   useEffect(() => {
@@ -78,11 +87,16 @@ export default function RecordEditPage() {
             prioridade: task.prioridade,
             category: task.categoria || "Geral",
             tag: task.tags?.[0] || "Trabalho",
-            deadline: task.deadline ? task.deadline.split("T")[0] : "",
+            deadline: task.deadline ? formatIsoToBr(task.deadline) : "",
           });
         }
       } catch (error) {
-        Alert.alert("Erro", "Não foi possível carregar a tarefa.");
+        triggerAlert(
+          "Erro",
+          "Não foi possível carregar a tarefa.",
+          () => setAlertVisible(false),
+          "danger",
+        );
       } finally {
         setFetching(false);
       }
@@ -95,17 +109,22 @@ export default function RecordEditPage() {
     setHasChanges(true);
   };
 
-  const openPicker = (field: FormKeys) => {
-    setActiveField(field);
-    setPickerVisible(true);
-  };
-
-  const selectOption = (value: string) => {
-    if (activeField) updateForm(activeField, value);
-    setPickerVisible(false);
-  };
-
   const handleUpdate = async () => {
+    // Validar formato da data antes de enviar
+    const dateParts = form.deadline.split("/");
+    if (dateParts.length !== 3 || dateParts[2].length !== 4) {
+      triggerAlert(
+        "Data Inválida",
+        "Use o formato DD/MM/AAAA",
+        () => setAlertVisible(false),
+        "danger",
+      );
+      return;
+    }
+
+    // Converter DD/MM/AAAA -> ISO 8601
+    const isoDeadline = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}T23:59:59.000Z`;
+
     triggerAlert(
       "Confirmar",
       "Deseja salvar as alterações nesta tarefa?",
@@ -120,12 +139,17 @@ export default function RecordEditPage() {
             prioridade: form.prioridade,
             categoria: form.category,
             tags: [form.tag],
-            deadline: form.deadline,
+            deadline: isoDeadline,
           });
           setHasChanges(false);
           router.back();
         } catch (error) {
-          Alert.alert("Erro", "Falha ao atualizar.");
+          triggerAlert(
+            "Erro",
+            "Falha ao atualizar.",
+            () => setAlertVisible(false),
+            "danger",
+          );
         } finally {
           setLoading(false);
         }
@@ -149,256 +173,205 @@ export default function RecordEditPage() {
     }
   };
 
+  const inputBg = theme.input || (themeName === "dark" ? "#252525" : "#E8E8E8");
+  const contrastBorder = theme.detail || "#333";
+  const textColor = theme.textLight || "#FFFFFF";
+  const accentColor = theme.accent || "#60439f";
+  const labelColor =
+    themeName === "esmeralda" ? theme.textPendente : accentColor;
+
   if (fetching) {
     return (
       <View
         style={[styles.loadingContainer, { backgroundColor: theme.background }]}
       >
-        <ActivityIndicator size="large" color={theme.accent} />
+        <ActivityIndicator size="large" color={accentColor} />
       </View>
     );
   }
 
-  const CustomPickerTrigger = ({
-    label,
-    value,
-    field,
-  }: {
-    label: string;
-    value: string;
-    field: FormKeys;
-  }) => (
-    <View style={styles.flex1}>
-      <Text style={[styles.label, { color: theme.accent }]}>{label}</Text>
-      <TouchableOpacity
-        style={[
-          styles.customInput,
-          { backgroundColor: theme.primary, borderColor: theme.secondary },
-        ]}
-        onPress={() => openPicker(field)}
-        activeOpacity={0.7}
-      >
-        <Text style={[styles.inputText, { color: theme.textLight }]}>
-          {value}
-        </Text>
-        <Octicons name="chevron-down" size={16} color={theme.detail} />
-      </TouchableOpacity>
-    </View>
-  );
-
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1, backgroundColor: theme.background }}
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <ScrollView
-        style={[styles.container, { backgroundColor: theme.background }]}
-        contentContainerStyle={styles.content}
-      >
-        <Text style={[styles.header, { color: theme.textLight }]}>
-          Editar Tarefa
-        </Text>
-
-        <Text style={[styles.label, { color: theme.accent }]}>Título</Text>
-        <TextInput
-          style={[
-            styles.input,
-            {
-              backgroundColor: theme.primary,
-              borderColor: theme.secondary,
-              color: theme.textLight,
-            },
-          ]}
-          value={form.titulo}
-          onChangeText={(v) => updateForm("titulo", v)}
-          placeholderTextColor={theme.detail}
-        />
-
-        <View style={styles.row}>
-          <CustomPickerTrigger
-            label="Status"
-            value={form.status}
-            field="status"
-          />
-          <View style={{ width: 12 }} />
-          <CustomPickerTrigger
-            label="Prioridade"
-            value={form.prioridade}
-            field="prioridade"
-          />
-        </View>
-
-        <View style={styles.row}>
-          <CustomPickerTrigger label="Tag" value={form.tag} field="tag" />
-          <View style={{ width: 12 }} />
-          <View style={styles.flex1}>
-            <Text style={[styles.label, { color: theme.accent }]}>Prazo</Text>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  backgroundColor: theme.primary,
-                  borderColor: theme.secondary,
-                  color: theme.textLight,
-                },
-              ]}
-              value={form.deadline}
-              placeholder="AAAA-MM-DD"
-              placeholderTextColor={theme.detail}
-              onChangeText={(v) => updateForm("deadline", v)}
-            />
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={[
-            styles.saveButton,
-            { backgroundColor: theme.accent },
-            !hasChanges && { backgroundColor: theme.secondary },
-          ]}
-          onPress={handleUpdate}
-          disabled={loading || !hasChanges}
-        >
-          {loading ? (
-            <ActivityIndicator color={theme.background} />
-          ) : (
-            <Text style={[styles.saveText, { color: theme.background }]}>
-              Salvar Alterações
-            </Text>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
-          <Text style={[styles.cancelButtonText, { color: "#FF3B30" }]}>
-            Cancelar e Voltar
-          </Text>
-        </TouchableOpacity>
-
-        <Modal visible={pickerVisible} transparent animationType="fade">
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setPickerVisible(false)}
+      <Body
+        componente01={
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContainer}
           >
-            <View
-              style={[styles.modalContent, { backgroundColor: theme.primary }]}
-            >
-              <Text style={[styles.modalHeader, { color: theme.textLight }]}>
-                Selecione uma opção
-              </Text>
-              {activeField &&
-                options[activeField].map((opt) => (
-                  <TouchableOpacity
-                    key={opt}
-                    style={[
-                      styles.optionButton,
-                      { borderBottomColor: theme.secondary },
-                    ]}
-                    onPress={() => selectOption(opt)}
-                  >
-                    <Text
-                      style={[
-                        styles.optionText,
-                        { color: theme.textLight },
-                        form[activeField] === opt && {
-                          color: theme.accent,
-                          fontWeight: "bold",
-                        },
-                      ]}
-                    >
-                      {opt}
-                    </Text>
-                    {form[activeField] === opt && (
-                      <Octicons name="check" size={16} color={theme.accent} />
-                    )}
-                  </TouchableOpacity>
-                ))}
-            </View>
-          </TouchableOpacity>
-        </Modal>
+            <View style={styles.formWrapper}>
+              <View style={{ marginBottom: 25 }}>
+                <Title texto="Editar Tarefa" style={{ color: labelColor }} />
+              </View>
 
-        <CustomAlert
-          visible={alertVisible}
-          title={alertConfig.title}
-          message={alertConfig.message}
-          type={alertConfig.type}
-          onConfirm={alertConfig.onConfirm}
-          onCancel={() => setAlertVisible(false)}
-          confirmText={alertConfig.type === "danger" ? "Descartar" : "Salvar"}
-        />
-      </ScrollView>
+              <Texto
+                texto="Título"
+                style={{ color: labelColor, fontWeight: "bold" }}
+              />
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: inputBg,
+                    color: textColor,
+                    borderColor: contrastBorder,
+                  },
+                ]}
+                value={form.titulo}
+                onChangeText={(v) => updateForm("titulo", v)}
+              />
+
+              <Texto
+                texto="Descrição"
+                style={{ color: labelColor, fontWeight: "bold" }}
+              />
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: inputBg,
+                    color: textColor,
+                    borderColor: contrastBorder,
+                    height: 100,
+                    textAlignVertical: "top",
+                  },
+                ]}
+                multiline
+                value={form.descricao}
+                onChangeText={(v) => updateForm("descricao", v)}
+              />
+
+              <View style={styles.row}>
+                <View style={{ flex: 1, marginRight: 10 }}>
+                  <Texto
+                    texto="Categoria"
+                    style={{ color: labelColor, fontWeight: "bold" }}
+                  />
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: inputBg,
+                        color: textColor,
+                        borderColor: contrastBorder,
+                      },
+                    ]}
+                    value={form.category}
+                    onChangeText={(v) => updateForm("category", v)}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Texto
+                    texto="Data Limite"
+                    style={{ color: labelColor, fontWeight: "bold" }}
+                  />
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: inputBg,
+                        color: textColor,
+                        borderColor: contrastBorder,
+                      },
+                    ]}
+                    value={form.deadline}
+                    placeholder="DD/MM/AAAA"
+                    placeholderTextColor="#666"
+                    keyboardType="numeric"
+                    maxLength={10}
+                    onChangeText={handleDateChange}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.row}>
+                <View style={{ flex: 1, marginRight: 10 }}>
+                  <OptionSelector
+                    label="Status"
+                    options={["PENDENTE", "EM_ANDAMENTO", "CONCLUIDA"]}
+                    selected={form.status}
+                    onSelect={(v) => updateForm("status", v)}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <OptionSelector
+                    label="Prioridade"
+                    options={["BAIXA", "MEDIA", "ALTA"]}
+                    selected={form.prioridade}
+                    onSelect={(v) => updateForm("prioridade", v)}
+                  />
+                </View>
+              </View>
+
+              <View style={[styles.row, { marginTop: 25, gap: 10 }]}>
+                <TouchableOpacity
+                  onPress={handleCancel}
+                  style={[styles.actionBtn, styles.cancelBtn]}
+                >
+                  <Text style={styles.cancelText}>CANCELAR</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={handleUpdate}
+                  disabled={loading || !hasChanges}
+                  style={[
+                    styles.actionBtn,
+                    {
+                      backgroundColor: hasChanges ? accentColor : "#444",
+                      flex: 2,
+                    },
+                  ]}
+                >
+                  {loading ? (
+                    <ActivityIndicator size="small" color="#FFF" />
+                  ) : (
+                    <Text style={styles.saveText}>SALVAR ALTERAÇÕES</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        }
+        componente02={null}
+      />
+
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        onConfirm={alertConfig.onConfirm}
+        onCancel={() => setAlertVisible(false)}
+        confirmText={alertConfig.type === "danger" ? "Descartar" : "Salvar"}
+      />
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
-  content: { padding: 24, maxWidth: 500, alignSelf: "center", width: "100%" },
-  header: {
-    fontSize: 26,
-    fontWeight: "bold",
-    marginBottom: 30,
-    letterSpacing: -0.5,
+  scrollContainer: { paddingBottom: 40, alignItems: "center" },
+  formWrapper: {
+    width: "100%",
+    maxWidth: 600,
+    paddingHorizontal: 20,
+    paddingTop: 30,
   },
-  label: {
-    fontSize: 11,
-    fontWeight: "700",
-    marginBottom: 8,
-    textTransform: "uppercase",
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 14,
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  customInput: {
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 20,
+  input: { borderRadius: 12, padding: 15, marginBottom: 20, borderWidth: 1.2 },
+  row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-end",
   },
-  inputText: { fontSize: 16 },
-  row: { flexDirection: "row" },
-  flex1: { flex: 1 },
-  saveButton: {
-    padding: 18,
-    borderRadius: 15,
-    alignItems: "center",
-    marginTop: 20,
-  },
-  saveText: { fontWeight: "600" },
-  cancelButton: { marginTop: 15, padding: 15, alignItems: "center" },
-  cancelButtonText: { fontWeight: "600" },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.7)",
+  actionBtn: {
+    height: 50,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
   },
-  modalContent: {
-    borderRadius: 20,
-    width: "100%",
-    maxWidth: 350,
-    padding: 20,
-  },
-  modalHeader: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  optionButton: {
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  optionText: { fontSize: 16 },
+  cancelBtn: { flex: 1, borderWidth: 1.5, borderColor: "#FF4444" },
+  cancelText: { color: "#FF4444", fontWeight: "bold" },
+  saveText: { color: "#FFF", fontWeight: "bold" },
 });
