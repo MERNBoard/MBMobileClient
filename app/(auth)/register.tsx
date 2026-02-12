@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Button } from "react-native";
 import { router } from "expo-router";
 import React from "react";
-import { API_AUTH } from "../../servirces/auth"
+import AuthService from "../../servirces/auth"
 import { Alert } from "react-native";
 
 export default function RegisterPage() {
@@ -13,10 +13,24 @@ export default function RegisterPage() {
   const [name, setName] = React.useState("");
 
   const handleRegister = async () => {
-    try {
-      await API_AUTH(name, email, password);
+    if (!name || !email || !password || !confirmPassword) {
+      Alert.alert("Erro", "Preencha todos os campos");
+      return;
+    }
 
-       Alert.alert("Sucesso", "Usuário cadastrado!");
+    if (password !== confirmPassword) {
+      Alert.alert("Erro", "As senhas não coincidem");
+      return;
+    }
+
+    try {
+      await AuthService.registrar({
+        nome: name,
+        email,
+        senha: password,
+        confirmPassword: confirmPassword, // agora é usado para validação no service
+      });
+      Alert.alert("Sucesso", "Registro realizado com sucesso!");
     } catch (error: any) {
       Alert.alert("Erro", error.message);
     }
@@ -56,13 +70,17 @@ export default function RegisterPage() {
 
             <Text style={styles.text}>Insira sua senha :</Text>
             <TextInput
-              placeholder="Digite sua senha" onChangeText={setPassword}
+              placeholder="Digite sua senha"
+              value={password}
+              onChangeText={setPassword}
               style={styles.input}
             />
 
             <Text style={styles.text}>Insira sua senha :</Text>
             <TextInput
-              placeholder="Comfirme sua senha" onChangeText={setConfirmPassword}
+              placeholder="Comfirme sua senha"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
               style={styles.input}
             />
 

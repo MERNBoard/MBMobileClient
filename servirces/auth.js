@@ -1,51 +1,41 @@
-import api from "./api";
-import { Alert } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage"; 
+import api from "./api"; 
 
-const URL = api;
+const AuthService = {
+  // Registrar usuário com validação de confirmPassword
+  async registrar({ nome, email, senha, confirmPassword }) {
 
-export async function API_AUTH(name, email, password, confirmPassword) {
-
-    // 🔹 Validações ANTES da requisição
-    if (!name || !email || !password || !confirmPassword) {
-        Alert.alert("Preencha todos os campos");
-      
+    if (!nome || !email || !senha || !confirmPassword) {
+      console.log("Campos faltando:", { nome, email, senha, confirmPassword });
+      throw new Error("Preencha todos os campos");
     }
 
-    if (password !== confirmPassword) {
-        Alert.alert("As senhas não coincidem");
-        
+    if (!email.includes("@")) {
+      console.log("Email inválido:", email);
+      throw new Error("Email inválido");
+    }
+
+    if (senha !== confirmPassword) {
+      console.log("Senhas não coincidem:", { senha, confirmPassword });
+      throw new Error("As senhas não coincidem");
     }
 
     try {
-        const response = await fetch(`${URL}/api/auth`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                name,
-                email,
-                password
-            })
-        });
+      const response = await api.post("/auth", { nome, email, senha });
+      const { accessToken, refreshToken } = response.data;
 
-        // 🔹 Proteção contra resposta que não é JSON
-        let data;
-        try {
-            data = await response.json();
-        } catch {
-            data = {};
-        }
+      // Salva tokens no AsyncStorage
+      await AsyncStorage.setItem("accessToken", accessToken);
+      await AsyncStorage.setItem("refreshToken", refreshToken);
 
-        if (!response.ok) {
-            throw new Error(data.error || "Erro ao cadastrar");
-        }
-
-        Alert.alert("Cadastro realizado com sucesso!");
-        return data;
-
+      return { accessToken, refreshToken };
     } catch (error) {
-        Alert.alert("Erro ao fazer cadastro", error.message || "Erro ao fazer cadastro");
-        throw error;
+      console.log("Erro no registro: ", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Erro ao registrar", error);
     }
-}
+  },
+
+  
+};
+
+export default AuthService;

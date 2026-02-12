@@ -1,12 +1,24 @@
 import { router } from "expo-router";
-import { Button, Text, View, StyleSheet, TextInput, TouchableOpacity } from "react-native";
+import { Button, Text, View, StyleSheet, TextInput, TouchableOpacity, Alert } from "react-native";
 import React from "react";
+import LoginService from "../../servirces/login"
+
 
 export default function AuthPage() {
 
 
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+
+  const handleLogin = async () => {
+      try {
+        await LoginService.login(email, password);
+  
+         Alert.alert("Sucesso", "Usuário logado com sucesso!");
+      } catch (error: any) {
+        Alert.alert("Erro", error.message);
+      }
+    };
   
 
   return (
@@ -45,8 +57,8 @@ export default function AuthPage() {
           {/* Botão para ir para o Dashboard */}
           <View >
             <Button
-              title="Dashboard"
-              onPress={() => router.push("/(dashboard)")}
+              title="Login"
+              onPress={handleLogin}
             />
           </View>
         </View>

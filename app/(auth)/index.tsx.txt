@@ -1,0 +1,214 @@
+/**
+ * DOCUMENTAÇÃO TÉCNICA - TELA DE AUTENTICAÇÃO (LOGIN)
+ * * 1. FLUXO DE AUTENTICAÇÃO:
+ * - Captura o e-mail e senha do usuário.
+ * - Envia para a rota POST '/auth/login'.
+ * - Recebe um Token de Acesso (JWT) e os dados do perfil do usuário.
+ * * 2. PERSISTÊNCIA (AsyncStorage):
+ * - '@MBToken': Chave onde salvamos o token JWT. Este token é usado pelo 'api.ts' 
+ * para autorizar todas as outras requisições do app.
+ * - 'user': Chave onde salvamos nome e email. Isso evita que o app precise 
+ * perguntar ao servidor "quem é este usuário" toda vez que abrir a tela de Perfil.
+ * * 3. SEGURANÇA E UX:
+ * - autoCapitalize="none": Evita que o celular coloque a primeira letra do email em maiúscula.
+ * - secureTextEntry: Esconde os caracteres da senha.
+ * - trim(): Remove espaços vazios acidentais no início ou fim do email.
+ * - replace(): Após o login, usamos replace para que o usuário não consiga 
+ * voltar para a tela de login usando o botão "voltar" do celular.
+ */
+
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
+import React, { useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from "react-native";
+import api from "../../servirces/api";
+
+export default function AuthPage() {
+  // Estados para controlar os campos de input
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  // Estado para o feedback visual de "carregando" no botão
+  const [loading, setLoading] = useState(false);
+
+  /**
+   * Função que executa a tentativa de login
+   */
+  const handleLogin = async () => {
+    // Validação básica: verifica se os campos estão preenchidos
+    if (!email || !password) {
+      Alert.alert("Atenção", "Por favor, preencha todos os campos.");
+      return;
+    }
+
+    setLoading(true); // Inicia o carregamento (mostra o spinner)
+    try {
+      // 1. Envio dos dados para o Backend
+      // Usamos toLowerCase() no email para evitar erros de case-sensitive
+      const response = await api.post("/auth/login", {
+        email: email.toLowerCase().trim(),
+        password: password,
+      });
+
+      // 2. Desestruturação da resposta
+      // O 'accessToken' é o que libera o acesso às rotas protegidas
+      // O 'user' contém dados como nome e email para o perfil
+      const { accessToken, user } = response.data;
+
+      // 3. Salvando o Token no "Disco" do celular
+      // A chave '@MBToken' deve ser a mesma lida no arquivo services/api.ts
+      await AsyncStorage.setItem("@MBToken", accessToken);
+
+      // 4. Salvando dados do usuário para uso offline/rápido
+      if (user) {
+        // Objetos precisam ser transformados em String para o AsyncStorage
+        await AsyncStorage.setItem("user", JSON.stringify(user));
+      } else {
+        // Caso o backend não envie o objeto user, criamos um padrão com o email digitado
+        await AsyncStorage.setItem(
+          "user",
+          JSON.stringify({ name: "Usuário", email: email }),
+        );
+      }
+
+      // 5. Navegação para a área logada
+      // 'replace' substitui a rota atual para o usuário não "voltar" para o login
+      router.replace("/(dashboard)");
+
+    } catch (error: any) {
+      console.error("Erro no login:", error);
+
+      // Captura a mensagem de erro vinda do servidor ou usa uma padrão
+      const errorMessage =
+        error.response?.data?.error || "E-mail ou senha incorretos.";
+
+      Alert.alert("Falha no Login", errorMessage);
+    } finally {
+      setLoading(false); // Desativa o carregamento
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Container de largura controlada para ficar bom em telas grandes e pequenas */}
+      <View style={{ width: "85%", maxWidth: 400 }}>
+
+        <Text style={styles.title}>Entrar</Text>
+
+        {/* Link para a tela de registro */}
+        <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
+          <Text style={styles.subtitle}>Ainda não tem conta? Cadastre-se</Text>
+        </TouchableOpacity>
+
+        <View style={styles.line} />
+
+        {/* --- FORMULÁRIO --- */}
+        <View>
+          <Text style={styles.text}>E-mail:</Text>
+          <TextInput
+            placeholder="Digite seu email"
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address" // Abre teclado com o '@' facilitado
+            autoCapitalize="none"        // Impede 'Email@...' (deixa 'email@...')
+            placeholderTextColor="#999"
+          />
+
+          <Text style={styles.text}>Senha:</Text>
+          <TextInput
+            placeholder="Digite sua senha"
+            style={styles.input}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={true}       // Transforma texto em asteriscos/pontos
+            placeholderTextColor="#999"
+          />
+        </View>
+
+        <View style={{ marginTop: 10 }}>
+          {/* Se estiver carregando, mostra o Spinner. Se não, mostra o Botão. */}
+          {loading ? (
+            <ActivityIndicator size="large" color="#fff" />
+          ) : (
+            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+              <Text style={styles.loginButtonText}>Entrar no Dashboard</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#21155d",
+    alignItems: "center",         // centraliza na horizontal
+    paddingTop: 40,
+    height: "100%", // garante que o container ocupe toda a altura
+    width: "100%", // garante que o container ocupe toda a largura
+    
+  },
+
+  title: {
+    color: "#fff",
+    fontSize: 30,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginTop: 120,    // espaço entre o topo e o título
+    marginBottom: 10,   // espaço entre o título e a linha
+    
+  },
+
+  text:{
+    color: "#f2e7fe",
+  },
+
+  subtitle: {
+    color: "#f2e7fe",
+    fontSize: 10,
+    textAlign: "center",
+    marginBottom: 20,
+  },
+
+  line: {
+    width: "80%",       // tamanho da linha
+    height: 1,          // espessura
+    backgroundColor: "#bebdda", // cor roxinha (ajusta se quiser)
+    marginTop: 10,
+    marginBottom: 20,   // espaço depois da linha
+    alignItems: "center",
+
+  },
+
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    backgroundColor: '#fff',
+    padding: 10,
+    borderRadius: 8,
+    fontSize: 16,
+    marginBottom: 20,   // espaço 
+    alignItems: "center",
+    
+  },
+
+  loginButton:{
+    backgroundColor: "#6a4fbf",
+  },
+
+  loginButtonText:{
+    color: "#fff",
+  }
+
+});
