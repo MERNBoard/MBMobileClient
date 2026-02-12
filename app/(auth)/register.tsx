@@ -1,8 +1,7 @@
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Button } from "react-native";
 import { router } from "expo-router";
 import React from "react";
-import AuthService from "../../servirces/auth"
-import { Alert } from "react-native";
+import { Alert, Button, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import RegistrarService from "../../servirces/registrar";
 
 export default function RegisterPage() {
 
@@ -13,18 +12,9 @@ export default function RegisterPage() {
   const [name, setName] = React.useState("");
 
   const handleRegister = async () => {
-    if (!name || !email || !password || !confirmPassword) {
-      Alert.alert("Erro", "Preencha todos os campos");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      Alert.alert("Erro", "As senhas não coincidem");
-      return;
-    }
 
     try {
-      await AuthService.registrar({
+      await RegistrarService.registrar({
         nome: name,
         email,
         senha: password,
@@ -46,7 +36,7 @@ export default function RegisterPage() {
           </Text>
 
           {/* Botão para ir para a página de registro */}
-          <TouchableOpacity onPress={() => router.push("/(auth)")}>
+          <TouchableOpacity onPress={() => router.push("/")}>
             <Text style={styles.subtitle}>Já tem conta? Faça login</Text>
           </TouchableOpacity>
 

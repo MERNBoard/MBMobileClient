@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage"; 
 import api from "./api"; 
 
-const AuthService = {
+const RegistrarService = {
   // Registrar usuário com validação de confirmPassword
   async registrar({ nome, email, senha, confirmPassword }) {
 
@@ -21,7 +21,7 @@ const AuthService = {
     }
 
     try {
-      const response = await api.post("/auth", { nome, email, senha });
+      const response = await api.post("/auth/registrar", { nome, email, senha });
       const { accessToken, refreshToken } = response.data;
 
       // Salva tokens no AsyncStorage
@@ -38,4 +38,4 @@ const AuthService = {
   
 };
 
-export default AuthService;
+export default RegistrarService;

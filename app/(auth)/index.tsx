@@ -16,6 +16,7 @@ export default function AuthPage() {
   
          Alert.alert("Sucesso", "Usuário logado com sucesso!");
       } catch (error: any) {
+        console.log("Erro no login: ", error.message);
         Alert.alert("Erro", error.message);
       }
     };
@@ -33,7 +34,7 @@ export default function AuthPage() {
           </Text>
 
           {/* Botão para ir para a página de registro */}
-          <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
+          <TouchableOpacity onPress={() => router.push("/register")}>
             <Text style={styles.subtitle}>Ainda não tem conta? Cadastre-se</Text>
           </TouchableOpacity>
 
