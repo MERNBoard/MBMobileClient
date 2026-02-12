@@ -12,8 +12,7 @@ type ButtonProps = {
 
 /**
  * ButtonColorido - Botão Primário.
- * Utilizado para a ação principal da tela (ex: "Entrar", "Salvar", "Confirmar").
- * Possui preenchimento sólido com a cor de destaque (accent).
+ * Agora com bordas ultra arredondadas para um design mais orgânico.
  */
 export function ButtonColorido({ text, onPress }: ButtonProps) {
   const { theme } = useTheme();
@@ -30,8 +29,7 @@ export function ButtonColorido({ text, onPress }: ButtonProps) {
 
 /**
  * ButtonTransparente - Botão Secundário / Outline.
- * Utilizado para ações alternativas ou de cancelamento (ex: "Voltar", "Cancelar", "Limpar").
- * Possui fundo transparente e bordas na cor de destaque.
+ * Mantém a transparência, mas segue o novo padrão de arredondamento.
  */
 export function ButtonTransparente({ text, onPress }: ButtonProps) {
   const { theme } = useTheme();
@@ -50,24 +48,33 @@ export function ButtonTransparente({ text, onPress }: ButtonProps) {
 
 const styles = StyleSheet.create({
   button: {
-    padding: 12,
-    borderRadius: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 25,
+    borderRadius: 30,
     alignItems: "center",
-    marginVertical: 8,
+    marginVertical: 10,
+
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
 
   buttonTransparente: {
     backgroundColor: "transparent",
-    padding: 12,
-    borderRadius: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 25,
+    borderRadius: 30,
     alignItems: "center",
-    marginVertical: 8,
-    borderWidth: 1.5,
+    marginVertical: 10,
+    borderWidth: 2,
   },
 
   text: {
-    fontSize: 13,
-    fontWeight: "900",
+    fontSize: 14,
+    fontWeight: "bold",
     textTransform: "uppercase",
+    letterSpacing: 1.1,
   },
 });

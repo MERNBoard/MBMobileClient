@@ -12,11 +12,11 @@ import { Texto } from "@/components/Text";
 import { useTheme } from "../context/ThemeContext";
 
 /**
- * Interface de Definição de Props
- * @param label - Título descritivo do seletor
- * @param options - Lista de strings com as opções de escolha
- * @param selected - A opção que está ativa no momento
- * @param onSelect - Função de callback disparada ao selecionar uma opção
+ * Interface OptionSelectorProps
+ * @param label - Texto descritivo exibido acima do seletor.
+ * @param options - Lista de opções (strings) disponíveis para seleção.
+ * @param selected - Valor atualmente selecionado.
+ * @param onSelect - Função chamada ao escolher uma nova opção.
  */
 interface OptionSelectorProps {
   label: string;
@@ -26,8 +26,8 @@ interface OptionSelectorProps {
 }
 
 /**
- * OptionSelector: Um componente de UI customizado que gerencia a seleção de opções
- * através de um Modal, garantindo consistência visual entre diferentes temas.
+ * Componente OptionSelector
+ * Fornece uma interface de seleção customizada utilizando um Modal centralizado.
  */
 export default function OptionSelector({
   label,
@@ -35,29 +35,29 @@ export default function OptionSelector({
   selected,
   onSelect,
 }: OptionSelectorProps) {
-  // Estado para controlar a abertura/fechamento do Modal de opções
+  // Estado para controlar a abertura/fechamento do Modal
   const [visible, setVisible] = useState<boolean>(false);
 
-  // Acesso ao contexto de tema para estilização dinâmica
+  // Consumo do contexto de tema para cores dinâmicas
   const { theme, themeName } = useTheme();
 
   // --- LÓGICA DE CORES SINCRONIZADA ---
 
-  // Determina se o modo escuro está ativo com base no nome ou cor de fundo
+  // Verifica se o tema atual deve ser tratado como Dark Mode
   const isDark = themeName === "dark" || theme.background === "#022C22";
 
-  // Define a cor de fundo do campo de seleção (Input)
+  // Define a cor de fundo do campo de entrada (estilo original)
   const bgInput = theme.input || (isDark ? "#252525" : "#E8E8E8");
 
   /**
-   * Regra de Negócio Visual:
-   * Se o tema for 'esmeralda', utiliza a cor de texto pendente (geralmente amarelo/laranja).
-   * Caso contrário, utiliza a cor de destaque (accent) definida no tema.
+   * Cor do rótulo:
+   * Aplica a cor de 'pendente' se o tema for "esmeralda",
+   * caso contrário utiliza a cor de destaque (accent).
    */
   const labelColor =
     themeName === "esmeralda" ? theme.textPendente : theme.accent || "#60439f";
 
-  // Configurações cromáticas para os elementos internos do Modal
+  // Variáveis de estilo extraídas do tema para o Modal
   const bgModal = theme.background || (isDark ? "#1A1A1A" : "#FFFFFF");
   const textColor = theme.textLight || (isDark ? "#FFF" : "#000");
   const accentColor = theme.accent || "#60439f";
@@ -65,10 +65,10 @@ export default function OptionSelector({
 
   return (
     <View style={styles.container}>
-      {/* Título do Campo */}
+      {/* Rótulo dinâmico do campo */}
       <Texto texto={label} style={{ color: labelColor, fontWeight: "bold" }} />
 
-      {/* Acionador do Seletor: Exibe o valor atual e abre o Modal ao ser pressionado */}
+      {/* Botão Seletor: Exibe o valor selecionado e abre o modal */}
       <TouchableOpacity
         style={[
           styles.selector,
@@ -81,19 +81,19 @@ export default function OptionSelector({
         onPress={() => setVisible(true)}
       >
         <Text style={[styles.selectorText, { color: textColor }]}>
-          {/* Formata a string removendo underscores para melhor legibilidade */}
+          {/* Formatação visual: troca underscore por espaço */}
           {selected.replace("_", " ")}
         </Text>
       </TouchableOpacity>
 
-      {/* Modal de Opções: Renderizado sobre a interface atual */}
+      {/* Modal de Opções */}
       <Modal
         transparent
         animationType="fade"
         visible={visible}
         onRequestClose={() => setVisible(false)}
       >
-        {/* Pressable Overlay: Permite fechar o modal ao tocar na área externa (backdrop) */}
+        {/* Overlay: Fecha o modal ao clicar fora da área de conteúdo */}
         <Pressable style={styles.overlay} onPress={() => setVisible(false)}>
           <View style={styles.modalWrapper}>
             <View
@@ -106,19 +106,19 @@ export default function OptionSelector({
                 },
               ]}
             >
-              {/* Título interno do Modal */}
+              {/* Título interno do Modal de seleção */}
               <Text style={[styles.modalTitle, { color: labelColor }]}>
                 Selecione {label}
               </Text>
 
-              {/* Mapeamento das opções recebidas via Props */}
+              {/* Renderização da lista de opções */}
               {options.map((option) => (
                 <TouchableOpacity
                   key={option}
                   style={[
                     styles.option,
                     { borderBottomColor: borderColor },
-                    // Aplica um destaque de fundo caso a opção seja a selecionada
+                    // Destaque visual suave se a opção estiver selecionada
                     selected === option && {
                       backgroundColor: accentColor + "25",
                     },
@@ -132,7 +132,7 @@ export default function OptionSelector({
                     style={[
                       styles.optionText,
                       { color: textColor },
-                      // Estilização extra para o texto da opção ativa
+                      // Texto em negrito e cor de destaque para o item selecionado
                       selected === option && {
                         color: labelColor,
                         fontWeight: "bold",
@@ -180,13 +180,14 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: "100%",
-    borderRadius: 24,
-    padding: 20,
+    borderRadius: 35,
+    padding: 25,
     elevation: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.5,
     shadowRadius: 15,
+    overflow: "hidden",
   },
   modalTitle: {
     fontSize: 18,
@@ -199,6 +200,8 @@ const styles = StyleSheet.create({
     padding: 20,
     borderBottomWidth: 0.5,
     alignItems: "center",
+    borderRadius: 15,
+    marginVertical: 2,
   },
   optionText: {
     fontSize: 16,
