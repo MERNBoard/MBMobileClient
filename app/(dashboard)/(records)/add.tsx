@@ -15,14 +15,13 @@ import {
   View,
 } from "react-native";
 
-import api from "../../../services/api"; // Certifique-se que o caminho está correto
+import api from "../../../services/api";
 
 type FormKeys = "status" | "prioridade" | "tag" | "category";
 
 export default function RecordAddPage() {
   const [loading, setLoading] = useState(false);
 
-  // Estado inicial limpo para uma nova tarefa
   const [form, setForm] = useState({
     titulo: "",
     descricao: "",
@@ -36,7 +35,6 @@ export default function RecordAddPage() {
   const [pickerVisible, setPickerVisible] = useState(false);
   const [activeField, setActiveField] = useState<FormKeys | null>(null);
 
-  // Opções seguindo o padrão da API
   const options = {
     status: ["PENDENTE", "EM_ANDAMENTO", "CONCLUIDA"],
     prioridade: ["BAIXA", "MEDIA", "ALTA"],
@@ -58,7 +56,6 @@ export default function RecordAddPage() {
     setPickerVisible(false);
   };
 
-  // --- FUNÇÃO PARA SALVAR NO BANCO ---
   const handleSave = async () => {
     if (!form.titulo.trim()) {
       Alert.alert("Atenção", "Por favor, insira ao menos um título.");
@@ -67,19 +64,18 @@ export default function RecordAddPage() {
 
     setLoading(true);
     try {
-      // POST para criar a tarefa
       await api.post("/usuario/tarefas", {
         titulo: form.titulo,
         descricao: form.descricao,
         status: form.status,
         prioridade: form.prioridade,
         categoria: form.category,
-        tags: [form.tag], // API espera array
+        tags: [form.tag],
         deadline: form.deadline || null,
       });
 
       Alert.alert("Sucesso", "Tarefa criada com sucesso!");
-      router.replace("/(dashboard)/(records)"); // Volta para a lista
+      router.replace("/(dashboard)/(records)");
     } catch (error: any) {
       console.error(error);
       Alert.alert("Erro", "Não foi possível criar a tarefa.");
