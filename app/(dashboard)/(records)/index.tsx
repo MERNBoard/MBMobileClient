@@ -19,6 +19,9 @@ import CustomAlert from "../../../components/CustomAlert";
 import { useTheme } from "../../../context/ThemeContext";
 import api from "../../../services/api";
 
+/**
+ * Interface Task - Define a estrutura de dados de uma tarefa vinda da API.
+ */
 interface Task {
   id: string;
   titulo: string;
@@ -30,17 +33,28 @@ interface Task {
   descricao?: string;
 }
 
+/**
+ * RecordsPage - Componente Principal de Listagem de Tarefas.
+ * Gerencia o ciclo de vida de busca, filtragem e renderização responsiva.
+ */
 export default function RecordsPage() {
   const { theme } = useTheme();
   const { width } = useWindowDimensions();
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
 
+  // ESTADOS PRINCIPAIS
+  const [tasks, setTasks] = useState<Task[]>([]); // Lista bruta da API
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]); // Lista exibida após busca
+  const [searchQuery, setSearchQuery] = useState(""); // Valor do campo de busca
+  const [loading, setLoading] = useState(true); // Feedback de carregamento inicial
+  const [refreshing, setRefreshing] = useState(false); // Controle do Pull-to-Refresh
+
+  /**
+   * Layout Responsivo: Define o número de colunas com base na largura da tela.
+   * Mobile: 1 coluna | Tablet: 2 colunas | Desktop/Web: 3 colunas.
+   */
   const numColumns = width > 1024 ? 3 : width > 720 ? 2 : 1;
 
+  // CONFIGURAÇÃO DE ALERTAS CUSTOMIZADOS
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertConfig, setAlertConfig] = useState({
     title: "",
@@ -59,6 +73,10 @@ export default function RecordsPage() {
     setAlertVisible(true);
   };
 
+  /**
+   * fetchTasks: Busca as tarefas do usuário.
+   * Implementa redirecionamento para login em caso de erro 401 (não autorizado).
+   */
   const fetchTasks = async () => {
     try {
       setLoading(true);
@@ -75,12 +93,20 @@ export default function RecordsPage() {
     }
   };
 
+  /**
+   * useFocusEffect: Recarrega os dados sempre que a página volta a ter foco
+   * (ex: ao voltar da tela de edição/criação).
+   */
   useFocusEffect(
     useCallback(() => {
       fetchTasks();
     }, []),
   );
 
+  /**
+   * useEffect (Filtragem): Monitora a searchQuery e atualiza a lista filtrada.
+   * Busca em títulos, categorias e tags.
+   */
   useEffect(() => {
     if (searchQuery.trim() === "") {
       setFilteredTasks(tasks);
@@ -97,6 +123,9 @@ export default function RecordsPage() {
     }
   }, [searchQuery, tasks]);
 
+  /**
+   * confirmDelete: Executa a exclusão lógica no servidor e atualiza o estado local.
+   */
   const confirmDelete = async (id: string) => {
     setAlertVisible(false);
     try {
@@ -107,6 +136,9 @@ export default function RecordsPage() {
     }
   };
 
+  /**
+   * getPriorityInfo: Retorna as cores e labels com base no nível de urgência.
+   */
   const getPriorityInfo = (priority: string) => {
     switch (priority?.toUpperCase()) {
       case "ALTA":
@@ -120,6 +152,9 @@ export default function RecordsPage() {
     }
   };
 
+  /**
+   * getStatusInfo: Traduz o status da API para labels amigáveis e cores de status.
+   */
   const getStatusInfo = (status: string) => {
     switch (status?.toUpperCase()) {
       case "CONCLUIDA":
@@ -133,6 +168,9 @@ export default function RecordsPage() {
     }
   };
 
+  /**
+   * renderItem: Componente de card individual da FlatList.
+   */
   const renderItem = ({ item }: { item: Task }) => {
     const priority = getPriorityInfo(item.prioridade);
     const status = getStatusInfo(item.status);
@@ -156,6 +194,7 @@ export default function RecordsPage() {
           numColumns > 1 && { maxWidth: width / numColumns - 40 },
         ]}
       >
+        {/* Cabeçalho do Card (Status e Prioridade) */}
         <View style={styles.cardHeader}>
           <Text style={[styles.statusLabel, { color: status.color }]}>
             {status.label}
@@ -172,6 +211,7 @@ export default function RecordsPage() {
           </View>
         </View>
 
+        {/* Conteúdo (Título e Categoria) */}
         <Text
           style={[styles.taskTitle, { color: theme.textLight }]}
           numberOfLines={2}
@@ -187,6 +227,7 @@ export default function RecordsPage() {
           {item.categoria || "Geral"}
         </Text>
 
+        {/* Tags */}
         <View style={styles.tagWrapper}>
           {item.tags?.map((tag, idx) => (
             <View
@@ -200,6 +241,7 @@ export default function RecordsPage() {
           ))}
         </View>
 
+        {/* Rodapé do Card (Deadline e Ações) */}
         <View style={[styles.cardFooter, { borderTopColor: theme.secondary }]}>
           <View style={styles.deadlineBox}>
             <Octicons name="calendar" size={12} color={theme.detail} />
@@ -254,6 +296,7 @@ export default function RecordsPage() {
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.background }]}
     >
+      {/* Header da Página */}
       <View style={styles.header}>
         <Text style={[styles.title, { color: theme.textLight }]}>
           Minhas Tarefas
@@ -269,6 +312,7 @@ export default function RecordsPage() {
         </TouchableOpacity>
       </View>
 
+      {/* Barra de Pesquisa */}
       <View style={styles.searchContainer}>
         <View
           style={[
@@ -287,6 +331,7 @@ export default function RecordsPage() {
         </View>
       </View>
 
+      {/* Listagem */}
       {loading && !refreshing ? (
         <ActivityIndicator
           size="large"
@@ -295,7 +340,7 @@ export default function RecordsPage() {
         />
       ) : (
         <FlatList
-          key={numColumns}
+          key={numColumns} // Força re-renderizar ao mudar grid (essencial para colunas dinâmicas)
           data={filteredTasks}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
@@ -320,6 +365,7 @@ export default function RecordsPage() {
         />
       )}
 
+      {/* Modal de Alerta Customizado */}
       <CustomAlert
         visible={alertVisible}
         title={alertConfig.title}

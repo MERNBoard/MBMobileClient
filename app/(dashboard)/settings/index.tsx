@@ -18,33 +18,44 @@ import CustomAlert from "../../../components/CustomAlert";
 import { Colors } from "../../../constants/theme";
 import { useTheme } from "../../../context/ThemeContext";
 
+/**
+ * SettingsPage - Componente de Configurações.
+ * Apresenta uma interface de navegação interna ("menu", "themes", "charts")
+ * para gerenciar preferências sem sair da tela.
+ */
 export default function SettingsPage() {
   const { theme, setTheme, themeName, tipoGrafico, setTipoGrafico } =
     useTheme();
+
+  // Controle de visualização interna (sub-telas)
   const [view, setView] = useState<"menu" | "themes" | "charts">("menu");
   const [alertVisible, setAlertVisible] = useState(false);
 
+  // Mock de dados do usuário (Pode ser substituído por dados do context de Auth no futuro)
   const usuario = {
     nome: "Usuário Exemplo",
     email: "contato@exemplo.com",
     plano: "Premium",
   };
 
+  /**
+   * handleLogout: Inicia o fluxo de encerramento de sessão.
+   */
   const handleLogout = () => {
     setAlertVisible(true);
   };
 
+  /**
+   * confirmLogout: Limpa o armazenamento persistente e redireciona.
+   */
   const confirmLogout = async () => {
     try {
       setAlertVisible(false);
-
-      setAlertVisible(false);
-      // 1. Remove o Token e os dados do usuário
-      // Usei multiRemove para limpar as chaves específicas que criamos no Login
+      // 1. Remove o Token e os dados do usuário do armazenamento local
       await AsyncStorage.multiRemove(["@MBToken", "user"]);
 
-      // 2. Redireciona para a tela de autenticação
-      // O replace impede que o usuário use o botão "voltar" para entrar no app novamente
+      // 2. Redireciona para a tela de autenticação usando replace
+      // Isso limpa a pilha de navegação para impedir o "voltar".
       router.replace("/(auth)");
     } catch (error) {
       console.error("Erro ao sair:", error);
@@ -52,6 +63,10 @@ export default function SettingsPage() {
     }
   };
 
+  /**
+   * Componente Interno: MenuItem
+   * Renderiza uma linha de opção padronizada para o menu de ajustes.
+   */
   const MenuItem = ({
     icon,
     title,
@@ -71,7 +86,7 @@ export default function SettingsPage() {
             { backgroundColor: theme.accent + "20" },
           ]}
         >
-          {/* Lógica para suportar o ícone de Aparência da Ionicons e manter Octicons nos outros */}
+          {/* Lógica condicional para usar famílias de ícones diferentes se necessário */}
           {title === "Aparência" ? (
             <Ionicons name="color-palette" size={20} color={theme.accent} />
           ) : (
@@ -98,6 +113,7 @@ export default function SettingsPage() {
     </TouchableOpacity>
   );
 
+  // VIEW: MENU PRINCIPAL
   if (view === "menu") {
     return (
       <ScrollView
@@ -106,6 +122,8 @@ export default function SettingsPage() {
         <Text style={[styles.headerTitle, { color: theme.textLight }]}>
           Ajustes
         </Text>
+
+        {/* Seção: Perfil do Usuário */}
         <View style={styles.section}>
           <Text style={[styles.sectionLabel, { color: theme.accent }]}>
             Sua Conta
@@ -154,6 +172,7 @@ export default function SettingsPage() {
           </View>
         </View>
 
+        {/* Seção: Customização Visual */}
         <View style={styles.section}>
           <Text style={[styles.sectionLabel, { color: theme.accent }]}>
             Customização
@@ -172,6 +191,7 @@ export default function SettingsPage() {
           />
         </View>
 
+        {/* Seção: Segurança e Saída */}
         <View style={styles.section}>
           <Text style={[styles.sectionLabel, { color: theme.accent }]}>
             Segurança
@@ -200,6 +220,7 @@ export default function SettingsPage() {
     );
   }
 
+  // VIEW: SELEÇÃO DE TIPO DE GRÁFICO (Estilo de visualização de dados)
   if (view === "charts") {
     return (
       <View
@@ -259,6 +280,7 @@ export default function SettingsPage() {
                 onPress={() => setTipoGrafico(item.id as any)}
               >
                 <View style={styles.previewBox}>
+                  {/* Renderização dinâmica do ícone baseada no ID do gráfico */}
                   {item.id === "pizza_donut" && (
                     <Entypo
                       name="circular-graph"
@@ -317,6 +339,7 @@ export default function SettingsPage() {
     );
   }
 
+  // VIEW: SELEÇÃO DE TEMAS (Aparência)
   return (
     <View
       style={[
@@ -338,6 +361,7 @@ export default function SettingsPage() {
           <Text style={[styles.backText, { color: theme.accent }]}>Voltar</Text>
         </TouchableOpacity>
 
+        {/* Card de Preview: Mostra em tempo real como o tema se comporta */}
         <View style={[styles.previewCard, { backgroundColor: theme.primary }]}>
           <View
             style={[styles.previewCircle, { backgroundColor: theme.accent }]}
@@ -375,6 +399,7 @@ export default function SettingsPage() {
 
       <ScrollView contentContainerStyle={{ padding: 20 }}>
         <View style={styles.grid}>
+          {/* Mapeia todos os temas disponíveis no arquivo de constantes */}
           {(Object.keys(Colors) as Array<keyof typeof Colors>).map((name) => (
             <TouchableOpacity
               key={name}

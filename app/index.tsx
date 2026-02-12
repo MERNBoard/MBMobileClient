@@ -12,18 +12,23 @@ import {
 import { useTheme } from "../context/ThemeContext";
 import api from "../services/api";
 
+/**
+ * SplashPage - Tela de abertura e lógica de roteamento inicial.
+ */
 export default function SplashPage() {
   const { theme, themeName } = useTheme();
   const [isReady, setIsReady] = useState(false);
 
-  const logoPop = useRef(new Animated.Value(0)).current;
-  const textSlide = useRef(new Animated.Value(20)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
+  // Referências para animações usando a API nativa Animated
+  const logoPop = useRef(new Animated.Value(0)).current; // Escala da logo
+  const textSlide = useRef(new Animated.Value(20)).current; // Deslize do texto
+  const opacity = useRef(new Animated.Value(0)).current; // Opacidade geral
 
   useEffect(() => {
     if (theme) {
       setIsReady(true);
 
+      // Dispara as animações em paralelo para um efeito visual fluido
       Animated.parallel([
         Animated.spring(logoPop, {
           toValue: 1,
@@ -43,20 +48,23 @@ export default function SplashPage() {
         }),
       ]).start();
 
-      // --- NOVA LÓGICA DE CHECAGEM DE LOGIN ---
+      /**
+       * Lógica de Navegação:
+       * Verifica a existência de um token salvo para pular a tela de login.
+       */
       const checkNavigation = async () => {
         try {
-          // Buscamos o token
           const token = await AsyncStorage.getItem("@MBToken");
 
-          // Tempo mínimo para o usuário apreciar sua animação (ex: 2.5 segundos)
+          // Delay artificial para garantir que o usuário veja a marca (branding)
           await new Promise((resolve) => setTimeout(resolve, 2500));
 
           if (token) {
-            // Configura a API para usar o token salvo
+            // Se houver token, injeta-o globalmente na API e vai para a Dashboard
             api.defaults.headers.Authorization = `Bearer ${token}`;
             router.replace("/(dashboard)");
           } else {
+            // Sem token, vai para Login/Cadastro
             router.replace("/(auth)");
           }
         } catch (error) {
@@ -69,12 +77,14 @@ export default function SplashPage() {
     }
   }, [theme]);
 
+  // Enquanto o tema não é carregado, exibe uma tela preta neutra
   if (!isReady || !theme) {
     return <View style={{ flex: 1, backgroundColor: "#000" }} />;
   }
 
+  // Cores derivadas do tema para a logo customizada (vetorial via View)
   const strongColor = theme.accent;
-  const middleColor = theme.accent + "95";
+  const middleColor = theme.accent + "95"; // 95% de opacidade
   const lightColor = "#F5F5F7";
 
   return (
@@ -97,7 +107,7 @@ export default function SplashPage() {
           },
         ]}
       >
-        {/* Logo com efeito de POP/Escala */}
+        {/* Logo MERNBoard construída com Views (Efeito de POP) */}
         <Animated.View
           style={[
             styles.outerCard,
@@ -114,10 +124,12 @@ export default function SplashPage() {
             ]}
           >
             <View style={styles.mWrapper}>
+              {/* Representação visual da perna esquerda do 'M' */}
               <View
                 style={[styles.mLegLeft, { backgroundColor: lightColor }]}
               />
               <View style={styles.mCenterContainer}>
+                {/* O detalhe do "Lápis" no centro da logo */}
                 <View
                   style={[styles.pencilBody, { backgroundColor: middleColor }]}
                 />
@@ -130,6 +142,7 @@ export default function SplashPage() {
                   />
                 </View>
               </View>
+              {/* Representação visual da perna direita do 'M' */}
               <View
                 style={[styles.mLegRight, { backgroundColor: strongColor }]}
               />
@@ -137,13 +150,13 @@ export default function SplashPage() {
           </View>
         </Animated.View>
 
-        {/* Texto MERNBoard */}
+        {/* Branding: Texto do Aplicativo */}
         <View style={styles.textRow}>
           <Text style={[styles.brandMern, { color: strongColor }]}>MERN</Text>
           <Text style={[styles.brandBoard, { color: middleColor }]}>Board</Text>
         </View>
 
-        {/* Loader e Texto de Carregamento */}
+        {/* Indicador de carregamento e feedback textual */}
         <View style={styles.loaderContainer}>
           <ActivityIndicator
             size="large"

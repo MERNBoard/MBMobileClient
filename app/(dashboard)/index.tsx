@@ -16,16 +16,26 @@ import { GraficoDinamico } from "../../components/GraficoDinamico";
 import { useTheme } from "../../context/ThemeContext";
 import api from "../../services/api";
 
+/**
+ * Tipo Tarefa - Define os status possíveis para o cálculo das métricas.
+ */
 type Tarefa = {
   id: string;
   status: "PENDENTE" | "EM_ANDAMENTO" | "CONCLUIDA";
 };
 
+/**
+ * Index (Dashboard) - Tela inicial após o login.
+ * Gerencia a lógica de sumarização de dados e visualização gráfica.
+ */
 export default function Index() {
   const { theme } = useTheme();
   const [tarefas, setTarefas] = useState<Tarefa[]>([]);
   const [loading, setLoading] = useState(false);
 
+  /**
+   * buscarTarefas: Consulta a API para obter a lista atualizada de tarefas.
+   */
   async function buscarTarefas() {
     try {
       setLoading(true);
@@ -40,12 +50,20 @@ export default function Index() {
     }
   }
 
+  /**
+   * useFocusEffect: Garante que os números da Dashboard sejam recalculados
+   * sempre que o usuário navegar de volta para esta tela (ex: após criar uma tarefa).
+   */
   useFocusEffect(
     useCallback(() => {
       buscarTarefas();
     }, []),
   );
 
+  /**
+   * Lógica de Sumarização:
+   * Filtra o array de tarefas localmente para evitar múltiplas chamadas de agregação ao banco.
+   */
   const pendentes = tarefas.filter((t) => t.status === "PENDENTE").length;
   const emAndamento = tarefas.filter((t) => t.status === "EM_ANDAMENTO").length;
   const concluidas = tarefas.filter((t) => t.status === "CONCLUIDA").length;
@@ -55,6 +73,7 @@ export default function Index() {
       style={[styles.container, { backgroundColor: theme.background }]}
       contentContainerStyle={{ paddingBottom: 30 }}
     >
+      {/* Feedback de carregamento sutil */}
       {loading && (
         <ActivityIndicator
           size="small"
@@ -63,6 +82,7 @@ export default function Index() {
         />
       )}
 
+      {/* Linha de Indicadores Rápidos (Cards de Status) */}
       <View style={styles.headersRow}>
         <Header
           style={{ backgroundColor: theme.cardPendente, borderRadius: 12 }}
@@ -107,6 +127,7 @@ export default function Index() {
         />
       </View>
 
+      {/* Seção Gráfica: Utiliza o GraficoDinamico que respeita a escolha do usuário nas Settings */}
       <Body
         style={{ backgroundColor: "transparent", alignItems: "center" }}
         componente01={
@@ -123,7 +144,6 @@ export default function Index() {
   );
 }
 
-// O OBJETO QUE ESTAVA FALTANDO:
 const styles = StyleSheet.create({
   container: {
     flex: 1,

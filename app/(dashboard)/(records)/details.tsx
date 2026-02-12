@@ -3,20 +3,29 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useTheme } from "../../../context/ThemeContext";
 import api from "../../../services/api";
 
+/**
+ * Página de Detalhes da Tarefa.
+ * * Exibe informações completas de uma tarefa específica, incluindo status,
+ * prioridade, descrição e dados do usuário responsável.
+ * Permite a navegação para a tela de edição.
+ */
 export default function TaskDetailsPage() {
+  /** @constant id - Recupera o ID da tarefa passado via parâmetro de rota. */
   const { id } = useLocalSearchParams();
   const { theme } = useTheme();
+
+  // ESTADOS DA PÁGINA
   const [task, setTask] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState<{
@@ -24,6 +33,12 @@ export default function TaskDetailsPage() {
     email: string;
   } | null>(null);
 
+  /**
+   * Hook de efeito que carrega os dados da tarefa e do usuário ao montar o componente.
+   * * 1. Busca todas as tarefas do usuário na API.
+   * 2. Filtra a tarefa correspondente ao ID da URL.
+   * 3. Recupera os dados do perfil do usuário do AsyncStorage.
+   */
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -36,7 +51,7 @@ export default function TaskDetailsPage() {
           setUserData(JSON.parse(storedUser));
         }
       } catch (error) {
-        console.error(error);
+        console.error("Erro ao carregar detalhes:", error);
       } finally {
         setLoading(false);
       }
@@ -44,6 +59,8 @@ export default function TaskDetailsPage() {
     loadData();
   }, [id]);
 
+  /** * Exibe indicador de carregamento enquanto a API não responde.
+   */
   if (loading)
     return (
       <ActivityIndicator
@@ -53,6 +70,8 @@ export default function TaskDetailsPage() {
       />
     );
 
+  /** * Fallback visual para IDs inexistentes ou erros de busca.
+   */
   if (!task)
     return (
       <Text style={[styles.errorText, { color: theme.textLight }]}>
@@ -60,12 +79,20 @@ export default function TaskDetailsPage() {
       </Text>
     );
 
+  /**
+   * Retorna o código hexadecimal da cor baseado no nível de prioridade.
+   * @param p - String da prioridade (ALTA, MEDIA, BAIXA).
+   */
   const getPriorityColor = (p: string) => {
     if (p === "ALTA") return "#FF3B30";
     if (p === "MEDIA") return "#FF9500";
     return "#34C759";
   };
 
+  /**
+   * Gera as iniciais do nome do usuário para o avatar.
+   * @param name - Nome completo do usuário.
+   */
   const getInitials = (name: string) => {
     if (!name) return "U";
     const parts = name.trim().split(" ");
@@ -78,6 +105,7 @@ export default function TaskDetailsPage() {
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.background }]}
     >
+      {/* HEADER DA PÁGINA: Contém título e botão de navegação para Edição */}
       <View style={[styles.header, { borderBottomColor: theme.primary }]}>
         <View style={{ width: 24 }} />
         <Text style={[styles.headerTitle, { color: theme.textLight }]}>
@@ -99,6 +127,7 @@ export default function TaskDetailsPage() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
+        {/* ROW SUPERIOR: Badge de Prioridade e Label de Status */}
         <View style={styles.topRow}>
           <View
             style={[
@@ -131,6 +160,7 @@ export default function TaskDetailsPage() {
           </Text>
         </View>
 
+        {/* CORPO: Título e Meta-informações (Data e Categoria) */}
         <Text style={[styles.title, { color: theme.textLight }]}>
           {task.titulo}
         </Text>
@@ -165,6 +195,7 @@ export default function TaskDetailsPage() {
 
         <View style={[styles.divider, { backgroundColor: theme.primary }]} />
 
+        {/* SEÇÃO: Descrição detalhada */}
         <Text style={[styles.sectionTitle, { color: theme.accent }]}>
           Descrição
         </Text>
@@ -174,6 +205,7 @@ export default function TaskDetailsPage() {
 
         <View style={[styles.divider, { backgroundColor: theme.primary }]} />
 
+        {/* SEÇÃO: Card do Responsável (Exibe dados do AsyncStorage) */}
         <Text style={[styles.sectionTitle, { color: theme.accent }]}>
           Responsável pela Tarefa
         </Text>
@@ -203,6 +235,7 @@ export default function TaskDetailsPage() {
           </View>
         </View>
 
+        {/* FOOTER: Status de atribuição */}
         <TouchableOpacity
           style={[styles.claimButton, { backgroundColor: theme.primary }]}
           onPress={() => alert("Você já é o responsável por esta tarefa.")}
