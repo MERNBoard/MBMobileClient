@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: "bold",
     textAlign: "center",
-    marginTop: 60, // Ajustado para caber mais campos
+    marginTop: 60,
     marginBottom: 10,
   },
   text: {

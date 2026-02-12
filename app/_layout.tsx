@@ -6,22 +6,30 @@ import * as NavigationBar from "expo-navigation-bar";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 import "react-native-reanimated";
 
 import { ThemeProvider, useTheme } from "../context/ThemeContext";
 
 function AppContent() {
-  const { theme } = useTheme();
+  const { theme, isDarkMode } = useTheme();
 
   useEffect(() => {
-    if (NavigationBar.setBackgroundColorAsync) {
-      NavigationBar.setBackgroundColorAsync(theme.background);
-      const isLight =
-        theme.background === "#F5F3FF" || theme.background === "#ffffff";
-      NavigationBar.setButtonStyleAsync(isLight ? "dark" : "light");
-    }
-  }, [theme]);
+    const syncNativeBars = async () => {
+      if (Platform.OS === "android") {
+        try {
+          await NavigationBar.setBackgroundColorAsync(theme.background);
+          await NavigationBar.setButtonStyleAsync(
+            isDarkMode ? "light" : "dark",
+          );
+        } catch (e) {
+          console.warn(e);
+        }
+      }
+    };
+
+    syncNativeBars();
+  }, [theme, isDarkMode]);
 
   const CustomNavTheme = {
     ...DefaultTheme,
@@ -37,7 +45,7 @@ function AppContent() {
   return (
     <NavigationProvider value={CustomNavTheme}>
       <View style={{ flex: 1, backgroundColor: theme.background }}>
-        <StatusBar style={theme.background === "#F5F3FF" ? "dark" : "light"} />
+        <StatusBar style={isDarkMode ? "light" : "dark"} />
 
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" />
