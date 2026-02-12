@@ -2,11 +2,19 @@ import React from "react";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 
+/**
+ * Propriedades compartilhadas por todos os tipos de botão.
+ */
 type ButtonProps = {
-  text: string;
-  onPress: () => void;
+  text: string; // Rótulo do botão (exibido em uppercase)
+  onPress: () => void; // Função de callback disparada no clique
 };
 
+/**
+ * ButtonColorido - Botão Primário.
+ * Utilizado para a ação principal da tela (ex: "Entrar", "Salvar", "Confirmar").
+ * Possui preenchimento sólido com a cor de destaque (accent).
+ */
 export function ButtonColorido({ text, onPress }: ButtonProps) {
   const { theme } = useTheme();
 
@@ -15,12 +23,16 @@ export function ButtonColorido({ text, onPress }: ButtonProps) {
       style={[styles.button, { backgroundColor: theme.accent }]}
       onPress={onPress}
     >
-      {}
       <Text style={[styles.text, { color: "#FFFFFF" }]}>{text}</Text>
     </TouchableOpacity>
   );
 }
 
+/**
+ * ButtonTransparente - Botão Secundário / Outline.
+ * Utilizado para ações alternativas ou de cancelamento (ex: "Voltar", "Cancelar", "Limpar").
+ * Possui fundo transparente e bordas na cor de destaque.
+ */
 export function ButtonTransparente({ text, onPress }: ButtonProps) {
   const { theme } = useTheme();
 

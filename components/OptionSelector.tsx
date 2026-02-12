@@ -1,16 +1,23 @@
 import React, { useState } from "react";
 import {
-    Modal,
-    Pressable,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 import { Texto } from "@/components/Text";
 import { useTheme } from "../context/ThemeContext";
 
+/**
+ * Interface de Definição de Props
+ * @param label - Título descritivo do seletor
+ * @param options - Lista de strings com as opções de escolha
+ * @param selected - A opção que está ativa no momento
+ * @param onSelect - Função de callback disparada ao selecionar uma opção
+ */
 interface OptionSelectorProps {
   label: string;
   options: string[];
@@ -18,26 +25,39 @@ interface OptionSelectorProps {
   onSelect: (value: string) => void;
 }
 
+/**
+ * OptionSelector: Um componente de UI customizado que gerencia a seleção de opções
+ * através de um Modal, garantindo consistência visual entre diferentes temas.
+ */
 export default function OptionSelector({
   label,
   options,
   selected,
   onSelect,
 }: OptionSelectorProps) {
+  // Estado para controlar a abertura/fechamento do Modal de opções
   const [visible, setVisible] = useState<boolean>(false);
+
+  // Acesso ao contexto de tema para estilização dinâmica
   const { theme, themeName } = useTheme();
 
   // --- LÓGICA DE CORES SINCRONIZADA ---
+
+  // Determina se o modo escuro está ativo com base no nome ou cor de fundo
   const isDark = themeName === "dark" || theme.background === "#022C22";
 
-  // Fundo do seletor usa o 'input' do tema
+  // Define a cor de fundo do campo de seleção (Input)
   const bgInput = theme.input || (isDark ? "#252525" : "#E8E8E8");
 
-  // No Esmeralda, label amarelo. Nos outros, o accent.
+  /**
+   * Regra de Negócio Visual:
+   * Se o tema for 'esmeralda', utiliza a cor de texto pendente (geralmente amarelo/laranja).
+   * Caso contrário, utiliza a cor de destaque (accent) definida no tema.
+   */
   const labelColor =
     themeName === "esmeralda" ? theme.textPendente : theme.accent || "#60439f";
 
-  // Cores do Modal
+  // Configurações cromáticas para os elementos internos do Modal
   const bgModal = theme.background || (isDark ? "#1A1A1A" : "#FFFFFF");
   const textColor = theme.textLight || (isDark ? "#FFF" : "#000");
   const accentColor = theme.accent || "#60439f";
@@ -45,9 +65,10 @@ export default function OptionSelector({
 
   return (
     <View style={styles.container}>
-      {/* Label com a cor dinâmica (Amarelo no Esmeralda) */}
+      {/* Título do Campo */}
       <Texto texto={label} style={{ color: labelColor, fontWeight: "bold" }} />
 
+      {/* Acionador do Seletor: Exibe o valor atual e abre o Modal ao ser pressionado */}
       <TouchableOpacity
         style={[
           styles.selector,
@@ -60,16 +81,19 @@ export default function OptionSelector({
         onPress={() => setVisible(true)}
       >
         <Text style={[styles.selectorText, { color: textColor }]}>
+          {/* Formata a string removendo underscores para melhor legibilidade */}
           {selected.replace("_", " ")}
         </Text>
       </TouchableOpacity>
 
+      {/* Modal de Opções: Renderizado sobre a interface atual */}
       <Modal
         transparent
         animationType="fade"
         visible={visible}
         onRequestClose={() => setVisible(false)}
       >
+        {/* Pressable Overlay: Permite fechar o modal ao tocar na área externa (backdrop) */}
         <Pressable style={styles.overlay} onPress={() => setVisible(false)}>
           <View style={styles.modalWrapper}>
             <View
@@ -82,29 +106,33 @@ export default function OptionSelector({
                 },
               ]}
             >
+              {/* Título interno do Modal */}
               <Text style={[styles.modalTitle, { color: labelColor }]}>
                 Selecione {label}
               </Text>
 
+              {/* Mapeamento das opções recebidas via Props */}
               {options.map((option) => (
                 <TouchableOpacity
                   key={option}
                   style={[
                     styles.option,
                     { borderBottomColor: borderColor },
+                    // Aplica um destaque de fundo caso a opção seja a selecionada
                     selected === option && {
                       backgroundColor: accentColor + "25",
                     },
                   ]}
                   onPress={() => {
                     onSelect(option);
-                    setVisible(false);
+                    setVisible(false); // Fecha o modal após a escolha
                   }}
                 >
                   <Text
                     style={[
                       styles.optionText,
                       { color: textColor },
+                      // Estilização extra para o texto da opção ativa
                       selected === option && {
                         color: labelColor,
                         fontWeight: "bold",

@@ -16,16 +16,26 @@ import CustomAlert from "../../components/CustomAlert";
 import { useTheme } from "../../context/ThemeContext";
 import api from "../../services/api";
 
+/**
+ * Componente de Página de Autenticação.
+ * * Responsável por renderizar o formulário de login, validar credenciais,
+ * realizar a comunicação com a API de autenticação e gerenciar a persistência da sessão.
+ */
 export default function AuthPage() {
+  // Hook de tema personalizado para suporte a múltiplos esquemas de cores
   const { theme, themeName } = useTheme();
+
+  // Estados do formulário de login
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // NOVO: Estado para manter logado
+  /** * Estado para controle da persistência de login (Login persistente)
+   */
   const [rememberMe, setRememberMe] = useState(true);
 
-  // Estados para o Alerta Customizado
+  /** * Configurações de estado para o componente de alerta customizado
+   */
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertConfig, setAlertConfig] = useState({
     title: "",
@@ -33,6 +43,12 @@ export default function AuthPage() {
     type: "default" as "default" | "danger",
   });
 
+  /**
+   * Dispara o alerta customizado na interface.
+   * @param title - Título que aparecerá no topo do alerta.
+   * @param message - Mensagem detalhada do erro ou aviso.
+   * @param type - Estilo visual do alerta ('default' ou 'danger').
+   */
   const showAlert = (
     title: string,
     message: string,
@@ -42,7 +58,13 @@ export default function AuthPage() {
     setAlertVisible(true);
   };
 
+  /**
+   * Processa a tentativa de login do usuário.
+   * * Realiza validações de campo vazio e formato de e-mail antes de enviar para a API.
+   * Em caso de sucesso, armazena o token e redireciona para o dashboard.
+   */
   const handleLogin = async () => {
+    // Validação de preenchimento básico
     if (!email.trim() || !password) {
       showAlert(
         "Campos Vazios",
@@ -52,6 +74,7 @@ export default function AuthPage() {
       return;
     }
 
+    // Validação de formato de e-mail via Expressão Regular
     const emailRegex = /\S+@\S+\.\S+/;
     if (!emailRegex.test(email.trim())) {
       showAlert(
@@ -64,6 +87,7 @@ export default function AuthPage() {
 
     setLoading(true);
     try {
+      // Chamada à API de autenticação
       const response = await api.post("/auth/login", {
         email: email.toLowerCase().trim(),
         password: password,
@@ -71,28 +95,34 @@ export default function AuthPage() {
 
       const { accessToken, user } = response.data;
 
+      // Configura o token para todas as futuras requisições desta sessão
       api.defaults.headers.Authorization = `Bearer ${accessToken}`;
 
+      // Gerenciamento de persistência local (AsyncStorage)
       if (rememberMe) {
         await AsyncStorage.setItem("@MBToken", accessToken);
         if (user) {
           await AsyncStorage.setItem("user", JSON.stringify(user));
         } else {
+          // Fallback caso o objeto user não venha completo na resposta
           await AsyncStorage.setItem(
             "user",
             JSON.stringify({ name: "Usuário", email: email }),
           );
         }
       } else {
+        // Limpa dados caso o usuário não queira ser lembrado
         await AsyncStorage.removeItem("@MBToken");
         await AsyncStorage.removeItem("user");
       }
 
+      // Navegação para a área logada do aplicativo
       router.replace("/(dashboard)");
     } catch (error: any) {
       let title = "Erro no Login";
       let message = "Verifique sua conexão e tente novamente.";
 
+      // Tratamento específico para erros retornados pelo servidor
       if (error.response) {
         title = "Acesso Negado";
         message =
@@ -100,6 +130,7 @@ export default function AuthPage() {
           error.response.data?.message ||
           "E-mail ou senha incorretos.";
       } else if (error.request) {
+        // Erro de falta de resposta (problemas de rede)
         title = "Falha na Rede";
         message = "Não conseguimos contato com o servidor.";
       }
@@ -111,7 +142,7 @@ export default function AuthPage() {
     }
   };
 
-  // --- REFINAMENTO DE CORES ---
+  // --- REFINAMENTO DINÂMICO DE CORES (THEMING) ---
   const isEsmeralda = themeName === "esmeralda";
   const mainTextColor = theme.textLight || "#FFFFFF";
   const highlightColor = isEsmeralda ? theme.textPendente : theme.accent;
@@ -129,6 +160,7 @@ export default function AuthPage() {
         <View style={styles.card}>
           <Text style={[styles.title, { color: highlightColor }]}>Entrar</Text>
 
+          {/* Link para navegação de Cadastro */}
           <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
             <Text style={[styles.subtitle, { color: theme.textLight + "CC" }]}>
               Ainda não tem conta?{" "}
@@ -141,6 +173,7 @@ export default function AuthPage() {
           <View style={[styles.line, { backgroundColor: highlightColor }]} />
 
           <View style={styles.form}>
+            {/* Campo de Entrada: E-mail */}
             <Text style={[styles.label, { color: highlightColor }]}>
               E-mail:
             </Text>
@@ -161,6 +194,7 @@ export default function AuthPage() {
               placeholderTextColor="#777"
             />
 
+            {/* Campo de Entrada: Senha */}
             <Text style={[styles.label, { color: highlightColor }]}>
               Senha:
             </Text>
@@ -180,7 +214,7 @@ export default function AuthPage() {
               placeholderTextColor="#777"
             />
 
-            {}
+            {/* Toggle de "Manter Conectado" */}
             <TouchableOpacity
               style={styles.rememberContainer}
               onPress={() => setRememberMe(!rememberMe)}
@@ -205,6 +239,7 @@ export default function AuthPage() {
             </TouchableOpacity>
           </View>
 
+          {/* Área de Ação: Botão de Login ou Indicador de Carregamento */}
           <View style={styles.buttonContainer}>
             {loading ? (
               <ActivityIndicator size="large" color={theme.accent} />
@@ -220,6 +255,7 @@ export default function AuthPage() {
         </View>
       </ScrollView>
 
+      {/* Componente de Alerta Modal */}
       <CustomAlert
         visible={alertVisible}
         title={alertConfig.title}

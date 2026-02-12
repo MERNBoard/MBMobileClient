@@ -2,15 +2,19 @@ import React from "react";
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 
+/**
+ * Interface de Propriedades do CustomAlert.
+ * Oferece flexibilidade para mensagens informativas ou de perigo.
+ */
 interface CustomAlertProps {
-  visible: boolean;
-  title: string;
-  message: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-  confirmText?: string;
-  cancelText?: string;
-  type?: "default" | "danger";
+  visible: boolean; // Controla a visibilidade do Modal
+  title: string; // Título em destaque
+  message: string; // Texto descritivo do alerta
+  onConfirm: () => void; // Ação ao clicar no botão principal
+  onCancel: () => void; // Ação ao clicar no botão de cancelamento
+  confirmText?: string; // Texto do botão de confirmação (Default: "Confirmar")
+  cancelText?: string; // Texto do botão de cancelamento (Default: "Cancelar")
+  type?: "default" | "danger"; // Define se o botão principal será Accent ou Vermelho
 }
 
 export default function CustomAlert({
@@ -26,8 +30,12 @@ export default function CustomAlert({
   const { theme } = useTheme();
 
   return (
+    /**
+     * Modal: Utiliza animação 'fade' e transparência para o efeito de overlay.
+     */
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
+        {/* Card do Alerta: Fundo utiliza a cor primária do tema atual */}
         <View style={[styles.content, { backgroundColor: theme.primary }]}>
           <Text style={[styles.title, { color: theme.textLight }]}>
             {title}
@@ -40,6 +48,7 @@ export default function CustomAlert({
           </Text>
 
           <View style={styles.buttons}>
+            {/* Botão Secundário: Geralmente usado para Cancelar/Voltar */}
             <TouchableOpacity
               style={[
                 styles.btnSecondary,
@@ -54,6 +63,7 @@ export default function CustomAlert({
               </Text>
             </TouchableOpacity>
 
+            {/* Botão Principal: Reage ao 'type' para ações destrutivas */}
             <TouchableOpacity
               style={[
                 styles.btnPrimary,

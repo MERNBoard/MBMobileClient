@@ -10,12 +10,20 @@ import {
 import Svg, { Circle, G } from "react-native-svg";
 import { useTheme } from "../context/ThemeContext";
 
+/**
+ * Interface de propriedades do componente.
+ * Recebe os valores numéricos brutos para cada status de tarefa.
+ */
 interface Props {
   pendentes: number;
   emAndamento: number;
   concluidas: number;
 }
 
+/**
+ * GraficoDinamico: Componente polimórfico que renderiza diferentes tipos de visualização
+ * de dados (Pizza, Donut, Barras, Linhas, Área) usando SVG e Animated API.
+ */
 export const GraficoDinamico = ({
   pendentes,
   emAndamento,
@@ -23,26 +31,37 @@ export const GraficoDinamico = ({
 }: Props) => {
   const { theme, tipoGrafico } = useTheme();
   const { width: windowWidth } = useWindowDimensions();
+
+  // Referência para o valor da animação (0 a 1)
   const animValue = useRef(new Animated.Value(0)).current;
 
+  // --- Lógica de Cálculos ---
   const total = pendentes + emAndamento + concluidas;
   const dataValues = [pendentes, emAndamento, concluidas];
   const labels = ["A Fazer", "Em Curso", "Feito"];
+
+  // Encontra o valor máximo para escalar proporcionalmente os gráficos de barras e linhas
   const maxVal = Math.max(pendentes, emAndamento, concluidas, 1);
 
+  // Responsividade: Define dimensões baseadas na largura da tela (Mobile vs Tablet)
   const chartSize = windowWidth > 600 ? 220 : 160;
   const containerHeight = windowWidth > 600 ? 300 : 240;
 
+  /**
+   * Hook de efeito para reiniciar e disparar a animação
+   * toda vez que o tipo de gráfico ou os dados mudarem.
+   */
   useEffect(() => {
     animValue.setValue(0);
     Animated.timing(animValue, {
       toValue: 1,
       duration: 1000,
       easing: Easing.out(Easing.exp),
-      useNativeDriver: false,
+      useNativeDriver: false, // Necessário false para animar propriedades de layout como height/width
     }).start();
   }, [tipoGrafico, total]);
 
+  // Renderização condicional para estado vazio
   if (total === 0) {
     return (
       <View style={[styles.emptyContainer, { height: containerHeight }]}>
@@ -53,12 +72,17 @@ export const GraficoDinamico = ({
     );
   }
 
-  // --- 1 & 2. PIZZAS (VERSÃO SVG COM PROPORÇÃO EXATA) ---
+  // --- 1 & 2. LÓGICA DE PIZZAS (Donut e Sólida) ---
+  // Utiliza cálculos trigonométricos e strokeDashoffset para desenhar arcos em SVG
   if (tipoGrafico === "pizza_donut" || tipoGrafico === "pizza_solid") {
     const isDonut = tipoGrafico === "pizza_donut";
     const radius = chartSize / 2;
+
+    // Se for sólido, a largura do traço ocupa todo o raio. Se for donut, apenas uma fatia.
     const strokeWidth = isDonut ? chartSize * 0.22 : radius;
     const innerRadius = radius - strokeWidth / 2;
+
+    // Circunferência base para o cálculo do dasharray (C = 2 * PI * r)
     const circumference = 2 * Math.PI * innerRadius;
 
     const data = [
@@ -79,6 +103,7 @@ export const GraficoDinamico = ({
             alignItems: "center",
           }}
         >
+          {/* Container Animado: Controla a rotação e a escala de entrada do gráfico */}
           <Animated.View
             style={{
               width: chartSize,
@@ -99,13 +124,17 @@ export const GraficoDinamico = ({
               height={chartSize}
               viewBox={`0 0 ${chartSize} ${chartSize}`}
             >
+              {/* Gira o grupo para começar no topo (-90 graus) */}
               <G rotation="-90" origin={`${radius}, ${radius}`}>
                 {data.map((item, index) => {
                   if (item.valor === 0) return null;
 
                   const percentage = item.valor / total;
+                  // Calcula onde o traço deve parar para representar a porcentagem
                   const strokeDashoffset =
                     circumference - circumference * percentage;
+
+                  // Calcula a rotação necessária para alinhar esta fatia após a anterior
                   const rotation = (currentOffset / total) * 360;
                   currentOffset += item.valor;
 
@@ -128,6 +157,7 @@ export const GraficoDinamico = ({
             </Svg>
           </Animated.View>
 
+          {/* Texto central exibindo o total de tarefas (Efeito Donut) */}
           <View style={styles.absoluteCenter}>
             <Text
               style={{
@@ -151,6 +181,7 @@ export const GraficoDinamico = ({
           </View>
         </View>
 
+        {/* Coluna de legendas dinâmicas */}
         <View style={styles.legendColumn}>
           <LegendItem
             color={theme.cardPendente}
@@ -175,7 +206,8 @@ export const GraficoDinamico = ({
     );
   }
 
-  // --- 3. BARRA VERTICAL ---
+  // --- 3. LÓGICA DE BARRA VERTICAL ---
+  // Cria colunas onde a altura é interpolada baseada na proporção do valor máximo
   if (tipoGrafico === "barra_vertical") {
     const data = [
       { label: "Pendente", valor: pendentes, cor: theme.cardPendente },
@@ -225,7 +257,8 @@ export const GraficoDinamico = ({
     );
   }
 
-  // --- 4. BARRA LATERAL ---
+  // --- 4. LÓGICA DE BARRA LATERAL ---
+  // Utiliza barras horizontais que preenchem a largura (width) proporcionalmente
   if (tipoGrafico === "barra_lateral") {
     const data = [
       { label: "A fazer", valor: pendentes, cor: theme.cardPendente },
@@ -282,10 +315,12 @@ export const GraficoDinamico = ({
     );
   }
 
-  // --- 5 & 6. LINHAS E ÁREA ---
+  // --- 5 & 6. LÓGICA DE LINHAS E ÁREA ---
+  // Renderiza pontos flutuantes ou blocos de área preenchidos com tooltips animados
   const isArea = tipoGrafico === "area";
   return (
     <View style={[styles.linesAreaContainer, { height: containerHeight }]}>
+      {/* Grid de fundo para auxiliar a percepção de escala */}
       <View style={styles.gridOverlay}>
         {[0, 0.5, 1].map((step) => (
           <View
@@ -315,6 +350,7 @@ export const GraficoDinamico = ({
 
           return (
             <View key={i} style={styles.lineCol}>
+              {/* Tooltip: Balão de valor que sobe junto com a animação */}
               <Animated.View
                 style={{
                   opacity: animValue,
@@ -331,6 +367,7 @@ export const GraficoDinamico = ({
                 </View>
               </Animated.View>
 
+              {/* Ponto ou Área: Reage ao tipo selecionado mudando borderRadius e dimensões */}
               <Animated.View
                 style={[
                   isArea ? styles.areaFill : styles.point,
@@ -367,6 +404,9 @@ export const GraficoDinamico = ({
   );
 };
 
+/**
+ * Subcomponente LegendItem: Renderiza uma linha da legenda com indicador de cor e valor.
+ */
 const LegendItem = ({ color, label, value, theme }: any) => (
   <View
     style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}

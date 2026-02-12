@@ -20,13 +20,24 @@ import CustomAlert from "../../../components/CustomAlert";
 import { useTheme } from "../../../context/ThemeContext";
 import api from "../../../services/api";
 
+/**
+ * RecordEditPage - Componente responsável pela edição de tarefas existentes.
+ * * Funcionalidades principais:
+ * 1. Busca dados da tarefa específica via API ao carregar.
+ * 2. Gerencia o estado de um formulário complexo (inputs, seletores e datas).
+ * 3. Implementa trava de segurança (hasChanges) para evitar perda de dados.
+ * 4. Realiza tratamento de datas entre o formato local (BR) e o padrão API (ISO 8601).
+ */
 export default function RecordEditPage() {
   const { theme, themeName } = useTheme();
   const { id } = useLocalSearchParams();
-  const [loading, setLoading] = useState(false);
-  const [fetching, setFetching] = useState(true);
-  const [hasChanges, setHasChanges] = useState(false);
 
+  // ESTADOS DE INTERFACE E CARREGAMENTO
+  const [loading, setLoading] = useState(false); // Estado do botão de salvamento
+  const [fetching, setFetching] = useState(true); // Estado do carregamento inicial dos dados
+  const [hasChanges, setHasChanges] = useState(false); // Controla se o usuário modificou o form
+
+  // ESTADO DO FORMULÁRIO
   const [form, setForm] = useState({
     titulo: "",
     descricao: "",
@@ -37,6 +48,7 @@ export default function RecordEditPage() {
     deadline: "",
   });
 
+  // CONFIGURAÇÃO DO ALERTA CUSTOMIZADO
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertConfig, setAlertConfig] = useState({
     title: "",
@@ -45,6 +57,7 @@ export default function RecordEditPage() {
     onConfirm: () => {},
   });
 
+  // Helper para disparar alertas de forma dinâmica
   const triggerAlert = (
     title: string,
     message: string,
@@ -55,6 +68,10 @@ export default function RecordEditPage() {
     setAlertVisible(true);
   };
 
+  /**
+   * Converte a data de ISO (YYYY-MM-DD) para padrão brasileiro (DD/MM/YYYY)
+   * Útil para exibir a data vinda do banco no input.
+   */
   const formatIsoToBr = (isoDate: string) => {
     if (!isoDate) return "";
     const date = isoDate.split("T")[0];
@@ -62,6 +79,10 @@ export default function RecordEditPage() {
     return `${day}/${month}/${year}`;
   };
 
+  /**
+   * Máscara em tempo real para o campo de data.
+   * Garante a formatação DD/MM/AAAA enquanto o usuário digita.
+   */
   const handleDateChange = (text: string) => {
     const cleaned = text.replace(/\D/g, "");
     let formatted = cleaned;
@@ -74,10 +95,14 @@ export default function RecordEditPage() {
     setHasChanges(true);
   };
 
+  /**
+   * Ciclo de vida: Busca os dados da tarefa assim que o ID está disponível.
+   */
   useEffect(() => {
     const fetchTaskData = async () => {
       try {
         const response = await api.get("/usuario/tarefas");
+        // Localiza a tarefa específica dentro do array retornado pela API
         const task = response.data.find((t: any) => t.id === id);
         if (task) {
           setForm({
@@ -104,13 +129,20 @@ export default function RecordEditPage() {
     if (id) fetchTaskData();
   }, [id]);
 
+  /**
+   * Atualiza campos genéricos do formulário e sinaliza que houve mudança.
+   */
   const updateForm = (key: string, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
     setHasChanges(true);
   };
 
+  /**
+   * handleUpdate: Prepara e envia os dados atualizados.
+   * - Valida o formato da data.
+   * - Converte a data BR de volta para ISO antes do PUT.
+   */
   const handleUpdate = async () => {
-    // Validar formato da data antes de enviar
     const dateParts = form.deadline.split("/");
     if (dateParts.length !== 3 || dateParts[2].length !== 4) {
       triggerAlert(
@@ -122,7 +154,6 @@ export default function RecordEditPage() {
       return;
     }
 
-    // Converter DD/MM/AAAA -> ISO 8601
     const isoDeadline = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}T23:59:59.000Z`;
 
     triggerAlert(
@@ -157,6 +188,9 @@ export default function RecordEditPage() {
     );
   };
 
+  /**
+   * handleCancel: Verifica se o usuário quer descartar progresso não salvo.
+   */
   const handleCancel = () => {
     if (hasChanges) {
       triggerAlert(
@@ -173,6 +207,7 @@ export default function RecordEditPage() {
     }
   };
 
+  // DEFINIÇÕES DINÂMICAS DE ESTILO BASEADAS NO TEMA
   const inputBg = theme.input || (themeName === "dark" ? "#252525" : "#E8E8E8");
   const contrastBorder = theme.detail || "#333";
   const textColor = theme.textLight || "#FFFFFF";
